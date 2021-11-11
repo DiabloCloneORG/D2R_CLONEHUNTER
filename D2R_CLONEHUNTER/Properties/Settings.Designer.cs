@@ -22,5 +22,173 @@ namespace D2R_CLONEHUNTER.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("34.117.122.6,127.0.0.1")]
+        public string ExcludedIpAddresses {
+            get {
+                return ((string)(this["ExcludedIpAddresses"]));
+            }
+            set {
+                this["ExcludedIpAddresses"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowTicks {
+            get {
+                return ((bool)(this["ShowTicks"]));
+            }
+            set {
+                this["ShowTicks"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AutoTrimLogs {
+            get {
+                return ((bool)(this["AutoTrimLogs"]));
+            }
+            set {
+                this["AutoTrimLogs"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool RingOnFound {
+            get {
+                return ((bool)(this["RingOnFound"]));
+            }
+            set {
+                this["RingOnFound"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool BlizzardPing {
+            get {
+                return ((bool)(this["BlizzardPing"]));
+            }
+            set {
+                this["BlizzardPing"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public int VolumeChaching {
+            get {
+                return ((int)(this["VolumeChaching"]));
+            }
+            set {
+                this["VolumeChaching"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool StreamerWriteGameTime {
+            get {
+                return ((bool)(this["StreamerWriteGameTime"]));
+            }
+            set {
+                this["StreamerWriteGameTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool StreamerWriteTotalTime {
+            get {
+                return ((bool)(this["StreamerWriteTotalTime"]));
+            }
+            set {
+                this["StreamerWriteTotalTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool StreamerWriteTotalGames {
+            get {
+                return ((bool)(this["StreamerWriteTotalGames"]));
+            }
+            set {
+                this["StreamerWriteTotalGames"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("250")]
+        public int StreamerWriteDelayMS {
+            get {
+                return ((int)(this["StreamerWriteDelayMS"]));
+            }
+            set {
+                this["StreamerWriteDelayMS"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SaveTotalGamesAndTotalTimeAcrossRestart {
+            get {
+                return ((bool)(this["SaveTotalGamesAndTotalTimeAcrossRestart"]));
+            }
+            set {
+                this["SaveTotalGamesAndTotalTimeAcrossRestart"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SaveLoggedIPAddressesAcrossRestart {
+            get {
+                return ((bool)(this["SaveLoggedIPAddressesAcrossRestart"]));
+            }
+            set {
+                this["SaveLoggedIPAddressesAcrossRestart"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2000-01-01")]
+        public global::System.DateTime TotalTimeStartDateTime {
+            get {
+                return ((global::System.DateTime)(this["TotalTimeStartDateTime"]));
+            }
+            set {
+                this["TotalTimeStartDateTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int TotalGamesJoined {
+            get {
+                return ((int)(this["TotalGamesJoined"]));
+            }
+            set {
+                this["TotalGamesJoined"] = value;
+            }
+        }
     }
 }

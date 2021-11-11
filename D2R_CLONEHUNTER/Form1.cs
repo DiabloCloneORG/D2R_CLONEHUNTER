@@ -1,4 +1,5 @@
-﻿using System;
+﻿using D2R_CLONEHUNTER.Properties;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,11 +17,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-
 namespace D2R_CLONEHUNTER
 {
     public partial class Form1 : Form
     {
+
+        /* SETTINGS SECTION */
+        
 
 
         private D2R_IpAddressCountComparer _LoggedIPComparer;
@@ -29,10 +32,14 @@ namespace D2R_CLONEHUNTER
 
         private uint _CurrentVolume = 0;
 
+        private  int _TotalGamesJoined = 0;
+
         private bool _flagInGame = false;
         private string _lastInGameIPAddress = "";
 
         private DateTime _applicationStartedOn;
+        private DateTime _lastGameJoinedOn;
+
 
         private Hashtable _loggedIPAddresses = new Hashtable();
         private Hashtable _excludedIPAddresses = new Hashtable();
@@ -302,8 +309,26 @@ namespace D2R_CLONEHUNTER
         {
             InitializeComponent();
 
-            _applicationStartedOn = DateTime.Now;
+            if (!Settings.Default.SaveTotalGamesAndTotalTimeAcrossRestart)
+            {
+                _applicationStartedOn = DateTime.Now;
+                Settings.Default.TotalTimeStartDateTime = _applicationStartedOn;
+                Settings.Default.Save();
+                Settings.Default.Reload();
+            }
+            else
+            {
+                _applicationStartedOn = Settings.Default.TotalTimeStartDateTime;
+                _TotalGamesJoined = Settings.Default.TotalGamesJoined;
+            }
 
+            
+
+
+
+
+            trackVolumeChaching.ValueChanged -= trackVolumeChaching_ValueChanged;
+            trackVolumeChaching.Scroll -= trackVolumeChaching_Scroll;
             _CurrentVolume = 0;
             waveOutGetVolume(IntPtr.Zero, out _CurrentVolume);
 
@@ -311,13 +336,16 @@ namespace D2R_CLONEHUNTER
             // Get the volume on a scale of 1 to 10 (to fit the trackbar)
             trackVolumeChaching.Value = _CalcVol / (ushort.MaxValue / 100);
 
+            trackVolumeChaching.ValueChanged += trackVolumeChaching_ValueChanged;
+            trackVolumeChaching.Scroll += trackVolumeChaching_Scroll;
+
+
             _LoggedIPComparer = new D2R_IpAddressCountComparer();
             _LoggedIPComparer.SortDirection = D2R_IpAddressCountComparer.D2RIpAddressCountSortOrder.Descending;
             _LoggedIPComparer.WhichComparison = D2R_IpAddressCountComparer.D2RIpAddressCountComparisonType.OccurenceCount;
             
             _LoggedIPAddressEntities = new List<D2R_IpAddressCountEntity>();
             _LoggedIPOccurences = new List<D2R_IpAddressOccurenceEntity>();
-
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -352,14 +380,18 @@ namespace D2R_CLONEHUNTER
                     if (pid.RemoteAddress.ToString().StartsWith("24.105.")) { continue; }
                     if (pid.RemoteAddress.ToString().StartsWith("137.")) { continue; }
                     if (pid.RemotePort.ToString() == "1119") { continue; }
+
+
                     if (_excludedIPAddresses.ContainsKey(pid.RemoteAddress.ToString())) { continue; }
+
+
 
                     if (!_activeIPAddresses.ContainsKey(pid.RemoteAddress.ToString()))
                     {
                         _activeIPAddresses.Add(pid.RemoteAddress.ToString(), 1);
                     }
                 }
-                catch (Exception ex)
+                catch 
                 {
 
                 }
@@ -397,6 +429,16 @@ namespace D2R_CLONEHUNTER
 
                     addLog("Game has been join on " + _lastInGameIPAddress);
 
+                    _lastGameJoinedOn = DateTime.Now;
+                    _TotalGamesJoined++;
+
+                    if (Settings.Default.SaveTotalGamesAndTotalTimeAcrossRestart)
+                    {
+                        Settings.Default.TotalGamesJoined = _TotalGamesJoined;
+                        Settings.Default.Save();
+                        Settings.Default.Reload();
+                    }
+
                     _LoggedIPOccurences.Add(new D2R_IpAddressOccurenceEntity(_lastInGameIPAddress, DateTime.Now));
 
                     if (txtDesiredIPAddress.Text.ToLowerInvariant()==_lastInGameIPAddress.ToLowerInvariant())
@@ -406,7 +448,7 @@ namespace D2R_CLONEHUNTER
                             System.Media.SoundPlayer my_wave_file = new System.Media.SoundPlayer(D2R_CLONEHUNTER.Properties.Resources.cash2);
                             my_wave_file.PlaySync();
                         }
-                        catch (Exception ex) {  }
+                        catch { }
 
                         addLog(">>> >>> GAME HAS BEEN FOUND ON THE RIGHT IP <<< <<<");
                     }
@@ -448,7 +490,7 @@ namespace D2R_CLONEHUNTER
                 {
                     p.Dispose();
                 }
-                catch (Exception ex) { }
+                catch { }
             }
 
 
@@ -483,9 +525,18 @@ namespace D2R_CLONEHUNTER
         {
             lblCurrentIP.Text = "Initializing";
 
-            this.Text = "DiabloClone.ORG Active D2R Connections Viewer v " + Application.ProductVersion  + " - Join Our Discord Server @ https://discord.gg/FQrpzV8Smv";
+            this.Text = "DiabloClone.ORG CLONEHUNTER v"+ Application.ProductVersion + " - Discord Server @ https://discord.gg/FQrpzV8Smv";
             addLog("Application has Started.");
             addLog("Application version is : " + Application.ProductVersion);
+
+
+            try { File.WriteAllText("runtime.txt", "0:00:00:00:000"); } catch { }
+
+            if (!Settings.Default.SaveLoggedIPAddressesAcrossRestart)
+            {
+                try { File.WriteAllText("totaltime.txt", "0:00:00:00:000"); } catch { }
+                try { File.WriteAllText("totalgames.txt", "0"); } catch { }
+            }
 
             PingBlizzard();
 
@@ -495,6 +546,281 @@ namespace D2R_CLONEHUNTER
             lblStatisticsMostSeenIP .Text = "N/A";
             lblStatisticsDuration.Text = "N/A";
 
+
+            ReloadSettingsExclusionIPs();
+            lstExcludedIPs.Items.Clear();
+            foreach (DictionaryEntry de in _excludedIPAddresses) { lstExcludedIPs.Items.Add(de.Key.ToString()); }
+
+            ReloadSettingsGenerals();
+
+            ReloadSettingsStreamer();
+        }
+
+        private void ReloadSettingsStreamer()
+        {
+            try
+            {
+                chkWriteTxtGameTime.CheckedChanged -= chkWriteTxtGameTime_CheckedChanged;
+                chkWriteTxtGameTime.Checked = Settings.Default.StreamerWriteGameTime;
+                chkWriteTxtGameTime.CheckedChanged += chkWriteTxtGameTime_CheckedChanged;
+
+                chkWriteTxtTotalGameJoined.CheckedChanged -= chkWriteTxtTotalGameJoined_CheckedChanged;
+                chkWriteTxtTotalGameJoined.Checked = Settings.Default.StreamerWriteTotalGames;
+                chkWriteTxtTotalGameJoined.CheckedChanged += chkWriteTxtTotalGameJoined_CheckedChanged;
+
+                chkWriteTxtTotalTime.CheckedChanged -= chkWriteTxtTotalTime_CheckedChanged;
+                chkWriteTxtTotalTime.Checked = Settings.Default.StreamerWriteTotalTime;
+                chkWriteTxtTotalTime.CheckedChanged += chkWriteTxtTotalTime_CheckedChanged;
+
+                ddStreamInfoTimerDelay.SelectedIndexChanged -= ddStreamInfoTimerDelay_SelectedIndexChanged;
+                switch (Settings.Default.StreamerWriteDelayMS)
+                {
+                    case 50: { ddStreamInfoTimerDelay.SelectedIndex = 0; break; }
+                    case 100: { ddStreamInfoTimerDelay.SelectedIndex = 1; break; }
+                    case 150: { ddStreamInfoTimerDelay.SelectedIndex = 2; break; }
+                    case 200: { ddStreamInfoTimerDelay.SelectedIndex = 3; break; }
+                    case 250: { ddStreamInfoTimerDelay.SelectedIndex = 4; break; }
+                    case 300: { ddStreamInfoTimerDelay.SelectedIndex = 5; break; }
+                    case 350: { ddStreamInfoTimerDelay.SelectedIndex = 6; break; }
+                    case 400: { ddStreamInfoTimerDelay.SelectedIndex = 7; break; }
+                    case 450: { ddStreamInfoTimerDelay.SelectedIndex = 8; break; }
+                    case 500: { ddStreamInfoTimerDelay.SelectedIndex = 9; break; }
+                    default: { ddStreamInfoTimerDelay.SelectedIndex = 9; break; }
+                }
+                ddStreamInfoTimerDelay.SelectedIndexChanged += ddStreamInfoTimerDelay_SelectedIndexChanged;
+            }
+            catch
+            {
+                MessageBox.Show(this,
+                    "An error occured while loading the configuration (Streamer Options section).\r\n\r\n" +
+                        "Please make sure you have the latest version with all the necessary included files.",
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void SaveSettingsStreamer()
+        {
+            try
+            {
+                Settings.Default.StreamerWriteGameTime = chkWriteTxtGameTime.Checked;
+                Settings.Default.StreamerWriteTotalGames = chkWriteTxtTotalGameJoined.Checked;
+                Settings.Default.StreamerWriteTotalTime = chkWriteTxtTotalTime.Checked;
+                switch (ddStreamInfoTimerDelay.SelectedIndex)
+                {
+                    case 0: { Settings.Default.StreamerWriteDelayMS = 50; break; }
+                    case 1: { Settings.Default.StreamerWriteDelayMS = 100; break; }
+                    case 2: { Settings.Default.StreamerWriteDelayMS = 150; break; }
+                    case 3: { Settings.Default.StreamerWriteDelayMS = 200; break; }
+                    case 4: { Settings.Default.StreamerWriteDelayMS = 250; break; }
+                    case 5: { Settings.Default.StreamerWriteDelayMS = 300; break; }
+                    case 6: { Settings.Default.StreamerWriteDelayMS = 350; break; }
+                    case 7: { Settings.Default.StreamerWriteDelayMS = 400; break; }
+                    case 8: { Settings.Default.StreamerWriteDelayMS = 450; break; }
+                    case 9: { Settings.Default.StreamerWriteDelayMS = 500; break; }
+                    default: { Settings.Default.StreamerWriteDelayMS = 500; break; }
+                }
+                Settings.Default.Save();
+                Settings.Default.Reload();
+            }
+            catch
+            {
+                MessageBox.Show(this,
+                    "An error occured while saving the configuration (General Options section).\r\n\r\n" +
+                        "Please make sure you have the latest version with all the necessary included files.",
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void ReloadSettingsGenerals()
+        {
+            try
+            {
+                chkAutoTrimLogs.CheckedChanged -= chkAutoTrimLogs_CheckedChanged;
+                chkAutoTrimLogs.Checked = Settings.Default.AutoTrimLogs;
+                chkAutoTrimLogs.CheckedChanged += chkAutoTrimLogs_CheckedChanged;
+
+                chkBlizzardPing.CheckedChanged -= chkBlizzardPing_CheckedChanged;
+                chkBlizzardPing.Checked = Settings.Default.BlizzardPing;
+                chkBlizzardPing.CheckedChanged += chkBlizzardPing_CheckedChanged;
+
+                chkRingOnFound.CheckedChanged -= chkRingOnFound_CheckedChanged;
+                chkRingOnFound.Checked = Settings.Default.RingOnFound;
+                chkRingOnFound.CheckedChanged += chkRingOnFound_CheckedChanged;
+
+                chkShowTicks.CheckedChanged -= chkShowTicks_CheckedChanged;
+                chkShowTicks.Checked = Settings.Default.ShowTicks;
+                chkShowTicks.CheckedChanged += chkShowTicks_CheckedChanged;
+
+                chkSaveTotalGamesAndTotalTimeAcrossRestart.CheckedChanged -= chkSaveTotalGamesAndTotalTimeAcrossRestart_CheckedChanged;
+                chkSaveTotalGamesAndTotalTimeAcrossRestart.Checked = Settings.Default.SaveTotalGamesAndTotalTimeAcrossRestart;
+                chkSaveTotalGamesAndTotalTimeAcrossRestart.CheckedChanged += chkSaveTotalGamesAndTotalTimeAcrossRestart_CheckedChanged;
+
+                chkSaveLoggedIPAddressesAccrossRestart.CheckedChanged -= chkSaveLoggedIPAddressesAccrossRestart_CheckedChanged;
+                chkSaveLoggedIPAddressesAccrossRestart.Checked = Settings.Default.SaveLoggedIPAddressesAcrossRestart;
+                chkSaveLoggedIPAddressesAccrossRestart.CheckedChanged += chkSaveLoggedIPAddressesAccrossRestart_CheckedChanged;
+
+                trackVolumeChaching.ValueChanged -= trackVolumeChaching_ValueChanged;
+                trackVolumeChaching.Value = Settings.Default.VolumeChaching;
+                trackVolumeChaching.ValueChanged += trackVolumeChaching_ValueChanged;
+            }
+            catch
+            {
+                MessageBox.Show(this,
+                    "An error occured while loading the configuration (General Options section).\r\n\r\n"+
+                        "Please make sure you have the latest version with all the necessary included files.",
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void SaveSettingsGenerals()
+        {
+            try
+            {
+                Settings.Default.AutoTrimLogs = chkAutoTrimLogs.Checked;
+                Settings.Default.BlizzardPing = chkBlizzardPing.Checked;
+                Settings.Default.RingOnFound = chkRingOnFound.Checked;
+                Settings.Default.ShowTicks = chkShowTicks.Checked;
+                Settings.Default.VolumeChaching = trackVolumeChaching.Value;
+                Settings.Default.SaveTotalGamesAndTotalTimeAcrossRestart = chkSaveTotalGamesAndTotalTimeAcrossRestart.Checked;
+                Settings.Default.SaveLoggedIPAddressesAcrossRestart = chkSaveLoggedIPAddressesAccrossRestart.Checked;
+
+                Settings.Default.Save();
+                Settings.Default.Reload();
+            }
+            catch
+            {
+                MessageBox.Show(this,
+                    "An error occured while saving the configuration (General Options section).\r\n\r\n" +
+                        "Please make sure you have the latest version with all the necessary included files.",
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void ReloadSettingsExclusionIPs()
+        {
+            if (Properties.Settings.Default.ExcludedIpAddresses != null)
+            {
+                if (Properties.Settings.Default.ExcludedIpAddresses.Length > 0)
+                {
+                    /* Create an array with the (possible) ip addresses set in the setting file */
+                    string[] lExcludedIpAddresses = Properties.Settings.Default.ExcludedIpAddresses.Split(',');
+
+                    /* Check if we got any element in our array. */
+                    if (lExcludedIpAddresses.Length > 0)
+                    {
+                        /* Iterate through each elements found to process em */
+                        foreach (string lIPAddressString in lExcludedIpAddresses)
+                        {
+                            try
+                            {
+                                /* Try to parse the element string into an IP Address Object. */
+                                IPAddress lIPAddress = null;
+                                if (System.Net.IPAddress.TryParse(lIPAddressString, out lIPAddress))
+                                {
+                                    /* Make sure we are not adding a duplicate to our internal hashtable */
+                                    if (!_excludedIPAddresses.ContainsKey(lIPAddressString))
+                                    {
+                                        _excludedIPAddresses.Add(lIPAddressString, 1);
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void SaveSettingsExclusionIPs()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (DictionaryEntry de in _excludedIPAddresses)
+                {
+                    string ipaddress = (string)de.Key;
+                    sb.Append(ipaddress);
+                    sb.Append(",");
+                }
+
+                String sbout = sb.ToString();
+                if (sbout.EndsWith(",")) { sbout = sbout.TrimEnd(','); }
+
+                Settings.Default.ExcludedIpAddresses = sbout;
+                Settings.Default.Save();
+                Settings.Default.Reload();
+
+                sb.Clear();
+                sbout = null;
+                
+            }
+            catch
+            {
+                MessageBox.Show(this,
+                    "An error occured while saving the configuration (Excluded IP Address section).\r\n\r\n" +
+                        "Please make sure you have the latest version with all the necessary included files.",
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+
+
+            if (Properties.Settings.Default.ExcludedIpAddresses != null)
+            {
+                if (Properties.Settings.Default.ExcludedIpAddresses.Length > 0)
+                {
+                    /* Create an array with the (possible) ip addresses set in the setting file */
+                    string[] lExcludedIpAddresses = Properties.Settings.Default.ExcludedIpAddresses.Split(',');
+
+                    /* Check if we got any element in our array. */
+                    if (lExcludedIpAddresses.Length > 0)
+                    {
+                        /* Iterate through each elements found to process em */
+                        foreach (string lIPAddressString in lExcludedIpAddresses)
+                        {
+                            try
+                            {
+                                /* Try to parse the element string into an IP Address Object. */
+                                IPAddress lIPAddress = null;
+                                if (System.Net.IPAddress.TryParse(lIPAddressString, out lIPAddress))
+                                {
+                                    /* Make sure we are not adding a duplicate to our internal hashtable */
+                                    if (!_excludedIPAddresses.ContainsKey(lIPAddressString))
+                                    {
+                                        _excludedIPAddresses.Add(lIPAddressString, 1);
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ddStreamInfoTimerDelay_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (ddStreamInfoTimerDelay.SelectedIndex > -1)
+            {
+                if (tmrTextFileCreations.Enabled)
+                {
+                    tmrTextFileCreations.Enabled = false;
+                }
+
+                int newdelay = (ddStreamInfoTimerDelay.SelectedIndex + 1) * 50;
+                tmrTextFileCreations.Interval = newdelay;
+                tmrTextFileCreations.Enabled = true;
+            }
+
+            SaveSettingsStreamer();
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -507,11 +833,6 @@ namespace D2R_CLONEHUNTER
             _TcpConnections = GetAllTcpConnections();
 
             refreshTable();
-
-
-            
-
-
         }
 
 
@@ -546,11 +867,12 @@ namespace D2R_CLONEHUNTER
                 // When the callback completes, it can wake up this thread.
                 pingSender.SendAsync("blizzard.com", timeout, buffer, options, waiter);
             }
-            catch (Exception ex)
+            catch 
             {
 
             }
         }
+
 
         private void PingSender_PingCompleted(object sender, PingCompletedEventArgs e)
         {
@@ -648,11 +970,14 @@ namespace D2R_CLONEHUNTER
                     gvLoggedIPs.DataSource = _LoggedIPAddressEntities;
                 }
 
+                ReloadSettingsExclusionIPs();
 
                 lstExcludedIPs.Items.Clear();
                 foreach (DictionaryEntry de in _excludedIPAddresses) { lstExcludedIPs.Items.Add(de.Key.ToString()); }
+
+                SaveSettingsExclusionIPs();
             }
-            catch (Exception ex)
+            catch
             {
 
             }
@@ -727,7 +1052,7 @@ namespace D2R_CLONEHUNTER
 
                 MessageBox.Show(this, "Exported to " + filename, "Confirmation", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button1);
             }
-            catch (Exception ex)
+            catch 
             {
 
             }
@@ -754,7 +1079,7 @@ namespace D2R_CLONEHUNTER
                 // Set the volume
                 waveOutSetVolume(IntPtr.Zero, NewVolumeAllChannels);
             }
-            catch (Exception ex) {  }
+            catch { }
         }
 
         private void gvLoggedIPs_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -764,7 +1089,7 @@ namespace D2R_CLONEHUNTER
                 gvLoggedIPs.DataSource = null;
                 this.Invalidate(true);
             }
-            catch (Exception ex) { }
+            catch { }
 
             try
             {
@@ -794,7 +1119,7 @@ namespace D2R_CLONEHUNTER
                     gvLoggedIPs.DataSource = _LoggedIPAddressEntities;
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 
             }
@@ -803,6 +1128,223 @@ namespace D2R_CLONEHUNTER
         private void tmrBlizzardPing_Tick(object sender, EventArgs e)
         {
             PingBlizzard();
+        }
+
+        private void tabPageApplicationLogs_Click(object sender, EventArgs e)
+        {
+
+        }
+
+
+
+        private void WriteTextFileTotalTime()
+        {
+            try
+            {
+                String text = "";
+
+                if (_applicationStartedOn != null)
+                {
+                    TimeSpan timespan = DateTime.Now.Subtract(_applicationStartedOn);
+
+                    text =
+                        (timespan.Days > 0 ? timespan.Days.ToString() : "0") + ":" +
+                        (timespan.Hours > 0 ? timespan.Hours.ToString().PadLeft(2, '0') : "00") + ":" +
+                        (timespan.Minutes > 0 ? timespan.Minutes.ToString().PadLeft(2, '0') : "00") + ":" +
+                        (timespan.Seconds > 0 ? timespan.Seconds.ToString().PadLeft(2, '0') : "00") + ":" +
+                        (timespan.Milliseconds > 0 ? timespan.Milliseconds.ToString().PadLeft(3, '0') : "000");
+                }
+                else
+                {
+                    text = "";
+                }
+
+                File.WriteAllText("totaltime.txt", text);
+            }
+            catch
+            {
+
+            }
+        }
+
+        private void WriteTextFileTotalRuns()
+        {
+            try
+            {
+                File.WriteAllText("totalgames.txt", _TotalGamesJoined.ToString());
+            }
+            catch 
+            {
+
+            }
+        }
+
+
+        private void WriteTextFileGameTime()
+        {
+            try
+            {
+                String text = "";
+
+                if (_flagInGame && _lastGameJoinedOn != null)
+                {
+                    TimeSpan timespan = DateTime.Now.Subtract(_lastGameJoinedOn);
+
+                    text =
+                        (timespan.Days > 0 ? timespan.Days.ToString() : "0") + ":" +
+                        (timespan.Hours > 0 ? timespan.Hours.ToString().PadLeft(2,'0') : "00") + ":" +
+                        (timespan.Minutes > 0 ? timespan.Minutes.ToString().PadLeft(2, '0') : "00") + ":" +
+                        (timespan.Seconds > 0 ? timespan.Seconds.ToString().PadLeft(2, '0') : "00") + ":" +
+                        (timespan.Milliseconds > 0 ? timespan.Milliseconds.ToString().PadLeft(3, '0') : "000");
+                }
+                else
+                {
+                    text = "";
+                }
+
+
+                File.WriteAllText("runtime.txt", text);
+            }
+            catch 
+            {
+
+            }
+        }
+
+        private void tmrTextFileCreations_Tick(object sender, EventArgs e)
+        {
+
+            if (chkWriteTxtTotalGameJoined.Checked)
+            {
+                WriteTextFileTotalRuns();
+            }
+
+            if (chkWriteTxtGameTime.Checked)
+            {
+                WriteTextFileGameTime();
+            }
+
+            if (chkWriteTxtTotalTime.Checked)
+            {
+                WriteTextFileTotalTime();
+            }
+
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            try { File.WriteAllText("runtime.txt", "0:00:00:00:000"); } catch { }
+
+            if (!Settings.Default.SaveTotalGamesAndTotalTimeAcrossRestart)
+            {
+                try { File.WriteAllText("totaltime.txt", "0:00:00:00:000"); } catch { }
+                try { File.WriteAllText("totalgames.txt", "0"); } catch { }
+            }
+        }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            try { File.WriteAllText("runtime.txt", "0:00:00:00:000"); } catch { }
+
+            if (!Settings.Default.SaveTotalGamesAndTotalTimeAcrossRestart)
+            {
+                try { File.WriteAllText("totaltime.txt", "0:00:00:00:000"); } catch { }
+                try { File.WriteAllText("totalgames.txt", "0"); } catch { }
+            }
+        }
+
+        private void btnBuildExclusionHelp_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(this,
+                "You want to build the exclusion list, when you first start the game, after the initial queue if any, when you are in the lobby.\r\n\r\n" +
+                "This is used to remove the Authentification Server from the current list of active ip address, so that we can only target the actual game ip.\r\n\r\n" +
+                "If your d2r client game completly close and crash, simply rebuild the exclusion when you rejoin the lobby open re-opening to rebuild the exclusion list.", "Explaination", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void chkShowTicks_CheckedChanged_1(object sender, EventArgs e)
+        {
+            SaveSettingsGenerals();
+        }
+
+        private void chkAutoTrimLogs_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveSettingsGenerals();
+        }
+
+        private void chkRingOnFound_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveSettingsGenerals();
+        }
+
+        private void trackVolumeChaching_ValueChanged(object sender, EventArgs e)
+        {
+            SaveSettingsGenerals();
+        }
+
+        private void chkBlizzardPing_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveSettingsGenerals();
+        }
+
+        private void btnResetConfiguration_Click(object sender, EventArgs e)
+        {
+            DialogResult dr = MessageBox.Show(this, "Are you sure you want to reset all configuration to default ?\r\n\r\nThis will restart the Application", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dr == DialogResult.Yes)
+            {
+                List<string> directories = new List<string>(Directory.EnumerateDirectories(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\DiabloClone.ORG"));
+
+                foreach (var dir in directories)
+                {
+                    try { Directory.Delete(dir, true); } 
+                    catch (Exception ex) 
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                }                
+            }
+            Application.Restart();
+        }
+
+        private void chkWriteTxtTotalGameJoined_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveSettingsStreamer();
+        }
+
+        private void chkWriteTxtGameTime_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveSettingsStreamer();
+        }
+
+        private void chkWriteTxtTotalTime_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveSettingsStreamer();
+        }
+
+
+        private void chkSaveLoggedIPAddressesAccrossRestart_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveSettingsGenerals();
+        }
+
+        private void chkSaveTotalGamesAndTotalTimeAcrossRestart_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveSettingsGenerals();
+
+            /* We need to save (or reset) our Total Games Joined 
+             * Setting Variable for next Application Restart */
+
+            if (Settings.Default.SaveTotalGamesAndTotalTimeAcrossRestart)
+            {
+                Settings.Default.TotalGamesJoined = _TotalGamesJoined;
+                Settings.Default.Save();
+                Settings.Default.Reload();
+            }
+            else
+            {
+                Settings.Default.TotalGamesJoined = 0;
+                Settings.Default.Save();
+                Settings.Default.Reload();
+            }
         }
     }
 }
