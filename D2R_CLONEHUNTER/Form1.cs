@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,6 +46,7 @@ namespace D2R_CLONEHUNTER
         private Hashtable _excludedIPAddresses = new Hashtable();
         private Hashtable _activeIPAddresses = new Hashtable();
 
+        private Hashtable _windowsFirewallBlockedCIDRs = new Hashtable();
 
         [DllImport("winmm.dll")]
         public static extern int waveOutGetVolume(IntPtr hwo, out uint dwVolume);
@@ -521,8 +523,29 @@ namespace D2R_CLONEHUNTER
         }
             
 
+
+
+
+        private static bool IsAdministrator()
+        {
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
+            if ( IsAdministrator() == false && Settings.Default.UseWindowsFirewallBlocking)
+            {
+                // Restart program and run as admin
+                var exeName = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+                ProcessStartInfo startInfo = new ProcessStartInfo(exeName);
+                startInfo.Verb = "runas";
+                System.Diagnostics.Process.Start(startInfo);
+                Application.Exit();
+                return;
+            }
+
             lblCurrentIP.Text = "Initializing";
 
             this.Text = "DiabloClone.ORG CLONEHUNTER v"+ Application.ProductVersion + " - Discord Server @ https://discord.gg/FQrpzV8Smv";
@@ -554,6 +577,15 @@ namespace D2R_CLONEHUNTER
             ReloadSettingsGenerals();
 
             ReloadSettingsStreamer();
+
+            ReloadWindowsFirewallSettings();
+
+            if (Settings.Default.UseWindowsFirewallBlocking)
+            {
+                ReloadSettingsWindowsFirewallBlockedCIDRs();
+                lstBlockedSubnets.Items.Clear();
+                foreach (DictionaryEntry de in _windowsFirewallBlockedCIDRs) { lstBlockedSubnets.Items.Add(de.Key.ToString()); }
+            }
         }
 
         private void ReloadSettingsStreamer()
@@ -704,14 +736,153 @@ namespace D2R_CLONEHUNTER
             }
         }
 
-        private void ReloadSettingsExclusionIPs()
+        private void ReloadWindowsFirewallSettings()
         {
-            if (Properties.Settings.Default.ExcludedIpAddresses != null)
+            try
             {
-                if (Properties.Settings.Default.ExcludedIpAddresses.Length > 0)
+                chkWindowsFirewallBlocking.CheckedChanged -= chkWindowsFirewallBlocking_CheckedChanged;
+                chkWindowsFirewallBlocking.Checked = Settings.Default.UseWindowsFirewallBlocking;
+                chkWindowsFirewallBlocking.CheckedChanged += chkWindowsFirewallBlocking_CheckedChanged;
+            }
+            catch
+            {
+                MessageBox.Show(this,
+                    "An error occured while loading the configuration (Windows Firewall Blocking CIDRs).\r\n\r\n" +
+                        "Please make sure you have the latest version with all the necessary included files.",
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void SaveWindowsFirewallSettings()
+        {
+            try
+            {
+                Settings.Default.UseWindowsFirewallBlocking = chkWindowsFirewallBlocking.Checked;
+
+                Settings.Default.Save();
+                Settings.Default.Reload();
+            }
+            catch
+            {
+                MessageBox.Show(this,
+                    "An error occured while saving the configuration (Windows Firewall Blocking CIDRs).\r\n\r\n" +
+                        "Please make sure you have the latest version with all the necessary included files.",
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+
+
+        private void ReloadSettingsWindowsFirewallBlockedCIDRs()
+        {
+            /* Attempt to Cleanup Old Blocked CIDRs if any are present */
+            if (_windowsFirewallBlockedCIDRs != null)
+            {
+                if (_windowsFirewallBlockedCIDRs.Count>0)
+                {
+                    foreach (DictionaryEntry de in _windowsFirewallBlockedCIDRs)
+                    {
+                        string cidr = (string)de.Key;
+                        WindowsFirewallUnblock(cidr);
+                    }
+                }
+            }
+
+            _windowsFirewallBlockedCIDRs = new Hashtable();
+
+            if (Settings.Default.BlockedCIDRs != null)
+            {
+                if (Settings.Default.BlockedCIDRs.Length > 0)
                 {
                     /* Create an array with the (possible) ip addresses set in the setting file */
-                    string[] lExcludedIpAddresses = Properties.Settings.Default.ExcludedIpAddresses.Split(',');
+                    string[] lBlockedCIDRs  = Settings.Default.BlockedCIDRs.Split(',');
+
+                    /* Check if we got any element in our array. */
+                    if (lBlockedCIDRs.Length > 0)
+                    {
+                        /* Iterate through each elements found to process em */
+                        foreach (string lCIDRString in lBlockedCIDRs)
+                        {
+                            try
+                            {
+                                /* Try to parse the element string into an IP Address Object. */
+                                string[] cidr = lCIDRString.Split('/');
+                                if (cidr.Length == 2)
+                                {
+                                    IPAddress lIPAddress = null;
+                                    if (System.Net.IPAddress.TryParse(cidr[0], out lIPAddress))
+                                    {
+                                        /* Make sure we are not adding a duplicate to our internal hashtable */
+                                        if (!_windowsFirewallBlockedCIDRs.ContainsKey(lCIDRString))
+                                        {
+                                            _windowsFirewallBlockedCIDRs.Add(lCIDRString, 1);
+
+                                            WindowsFirewallBlock(lCIDRString);
+                                        }
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        private void SaveSettingsWindowsFirewallBlockedCIDRs()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (DictionaryEntry de in _windowsFirewallBlockedCIDRs)
+                {
+                    string cidr = (string)de.Key;
+                    sb.Append(cidr);
+                    sb.Append(",");
+                }
+
+                String sbout = sb.ToString();
+                if (sbout.EndsWith(",")) { sbout = sbout.TrimEnd(','); }
+
+                Settings.Default.BlockedCIDRs = sbout;
+                Settings.Default.Save();
+                Settings.Default.Reload();
+
+                sb.Clear();
+                sbout = null;
+
+            }
+            catch
+            {
+                MessageBox.Show(this,
+                    "An error occured while saving the configuration (Windows Firewall Blocked CIDRs section).\r\n\r\n" +
+                        "Please make sure you have the latest version with all the necessary included files.",
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+
+            ReloadSettingsWindowsFirewallBlockedCIDRs();
+        }
+
+
+
+
+
+        private void ReloadSettingsExclusionIPs()
+        {
+            if (Settings.Default.ExcludedIpAddresses != null)
+            {
+                if (Settings.Default.ExcludedIpAddresses.Length > 0)
+                {
+                    /* Create an array with the (possible) ip addresses set in the setting file */
+                    string[] lExcludedIpAddresses = Settings.Default.ExcludedIpAddresses.Split(',');
 
                     /* Check if we got any element in our array. */
                     if (lExcludedIpAddresses.Length > 0)
@@ -773,12 +944,12 @@ namespace D2R_CLONEHUNTER
             }
 
 
-            if (Properties.Settings.Default.ExcludedIpAddresses != null)
+            if (Settings.Default.ExcludedIpAddresses != null)
             {
-                if (Properties.Settings.Default.ExcludedIpAddresses.Length > 0)
+                if (Settings.Default.ExcludedIpAddresses.Length > 0)
                 {
                     /* Create an array with the (possible) ip addresses set in the setting file */
-                    string[] lExcludedIpAddresses = Properties.Settings.Default.ExcludedIpAddresses.Split(',');
+                    string[] lExcludedIpAddresses = Settings.Default.ExcludedIpAddresses.Split(',');
 
                     /* Check if we got any element in our array. */
                     if (lExcludedIpAddresses.Length > 0)
@@ -1240,6 +1411,19 @@ namespace D2R_CLONEHUNTER
                 try { File.WriteAllText("totaltime.txt", "0:00:00:00:000"); } catch { }
                 try { File.WriteAllText("totalgames.txt", "0"); } catch { }
             }
+
+            /* Attempt to Cleanup Old Blocked CIDRs if any are present */
+            if (_windowsFirewallBlockedCIDRs != null)
+            {
+                if (_windowsFirewallBlockedCIDRs.Count > 0)
+                {
+                    foreach (DictionaryEntry de in _windowsFirewallBlockedCIDRs)
+                    {
+                        string cidr = (string)de.Key;
+                        WindowsFirewallUnblock(cidr);
+                    }
+                }
+            }
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -1250,6 +1434,19 @@ namespace D2R_CLONEHUNTER
             {
                 try { File.WriteAllText("totaltime.txt", "0:00:00:00:000"); } catch { }
                 try { File.WriteAllText("totalgames.txt", "0"); } catch { }
+            }
+
+            /* Attempt to Cleanup Old Blocked CIDRs if any are present */
+            if (_windowsFirewallBlockedCIDRs != null)
+            {
+                if (_windowsFirewallBlockedCIDRs.Count > 0)
+                {
+                    foreach (DictionaryEntry de in _windowsFirewallBlockedCIDRs)
+                    {
+                        string cidr = (string)de.Key;
+                        WindowsFirewallUnblock(cidr);
+                    }
+                }
             }
         }
 
@@ -1345,6 +1542,184 @@ namespace D2R_CLONEHUNTER
                 Settings.Default.Save();
                 Settings.Default.Reload();
             }
+        }
+
+        private void btnFirewallBlockSubnet_Click(object sender, EventArgs e)
+        {
+            System.Net.IPAddress lIpAddress;
+            try
+            {
+                if (!System.Net.IPAddress.TryParse(txtFirewallSubnetToBlock.Text, out lIpAddress))
+                {
+                    MessageBox.Show(this, "The provided IP Address is invalid. Please enter a valid IP address in the textbox to block", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            catch 
+            {
+                MessageBox.Show(this, "The provided IP Address is invalid. Please enter a valid IP address in the textbox to block", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            String lSubnetClass = "";
+            if (ddFirewallSubnetToBlockClass.SelectedIndex < 0)
+            {
+                MessageBox.Show(this, "You need to select a subnet class to block an ip address.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            else
+            {
+                switch (ddFirewallSubnetToBlockClass.SelectedIndex)
+                {
+                    case 0: { lSubnetClass = "/8"; break; }
+                    case 1: { lSubnetClass = "/16"; break; }
+                    case 2: { lSubnetClass = "/24"; break; }
+                    case 3: { lSubnetClass = "/32"; break; }
+                    default: { lSubnetClass = "/32"; break; }
+                }
+            }
+
+            String cidr = lIpAddress.ToString() + lSubnetClass;
+            if (_windowsFirewallBlockedCIDRs.ContainsKey(cidr))
+            {
+                MessageBox.Show(this, "The provided IP Address Block (Subnet/CIDR) already exist in the blocked list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            _windowsFirewallBlockedCIDRs.Add(cidr, 1);
+            lstBlockedSubnets.Items.Add(cidr);
+
+            WindowsFirewallBlock(cidr);
+
+            SaveSettingsWindowsFirewallBlockedCIDRs();
+
+            txtFirewallSubnetToBlock.Text = "";
+            ddFirewallSubnetToBlockClass.SelectedIndex = -1;
+        }
+
+        private void btnFirewallClearBlockedSelectedSubnet_Click(object sender, EventArgs e)
+        {
+            if (lstBlockedSubnets.SelectedIndex<0)
+            {
+                MessageBox.Show(this, "You need to select a blocked subnet in the list to unblock it.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            else
+            {
+                String lSelectedListElement = (String)lstBlockedSubnets.Items[lstBlockedSubnets.SelectedIndex].ToString();
+
+                WindowsFirewallUnblock(lSelectedListElement);
+
+                lstBlockedSubnets.Items.RemoveAt(lstBlockedSubnets.SelectedIndex);
+
+                _windowsFirewallBlockedCIDRs.Remove(lSelectedListElement);
+
+                SaveSettingsWindowsFirewallBlockedCIDRs();
+
+            }
+        }
+
+        private void WindowsFirewallBlock(string cidr)
+        {
+            try
+            {
+                String arguments_in = "advfirewall firewall add rule name=\"DC_CLONEHUNTER IPs BLOCKING\" action=block remoteip=" + cidr + " dir=in";
+                ProcessStartInfo psi_in = new ProcessStartInfo("netsh", arguments_in);
+                psi_in.RedirectStandardOutput = true;
+                psi_in.UseShellExecute = false;
+                psi_in.CreateNoWindow = true;
+                System.Diagnostics.Process.Start(psi_in);
+            }
+            catch (Exception ex)
+            {
+                addLog("Error while blocking (in) " + cidr + " from the Windows Firewall : " + ex.Message);
+            }
+
+            addLog("Firewall Blocking (in) " + cidr + " from the Windows Firewall : ");
+
+            try
+            {
+                String arguments_out = "advfirewall firewall add rule name=\"DC_CLONEHUNTER IPs BLOCKING\" action=block remoteip=" + cidr + " dir=out";
+                ProcessStartInfo psi_out = new ProcessStartInfo("netsh", arguments_out);
+                psi_out.RedirectStandardOutput = true;
+                psi_out.UseShellExecute = false;
+                psi_out.CreateNoWindow = true;
+                System.Diagnostics.Process.Start(psi_out);
+            }
+            catch (Exception ex)
+            {
+                addLog("Error while blocking (out) " + cidr + " from the Windows Firewall : " + ex.Message);
+            }
+
+            addLog("Firewall Blocking (out) " + cidr + " from the Windows Firewall : ");
+
+
+
+        }
+
+        private void WindowsFirewallUnblock(string cidr)
+        {
+            try
+            {
+                String arguments_in = "advfirewall firewall delete rule name=\"DC_CLONEHUNTER IPs BLOCKING\" remoteip=" + cidr + " dir=in";
+                ProcessStartInfo psi_in = new ProcessStartInfo("netsh", arguments_in);
+                psi_in.RedirectStandardOutput = true;
+                psi_in.UseShellExecute = false;
+                psi_in.CreateNoWindow = true;
+                System.Diagnostics.Process.Start(psi_in);
+            }
+            catch (Exception ex) 
+            {
+                addLog("Error while unblocking (in) " + cidr + " from the Windows Firewall : " + ex.Message);
+            }
+            
+            addLog("Firewall Unblocking (in) " + cidr + " from the Windows Firewall : ");
+
+            try
+            { 
+                String arguments_out = "advfirewall firewall delete rule name=\"DC_CLONEHUNTER IPs BLOCKING\" remoteip=" + cidr + " dir=out";
+                ProcessStartInfo psi_out = new ProcessStartInfo("netsh", arguments_out);
+                psi_out.RedirectStandardOutput = true;
+                psi_out.UseShellExecute = false;
+                psi_out.CreateNoWindow = true;
+                System.Diagnostics.Process.Start(psi_out);
+            }
+            catch (Exception ex)
+            {
+                addLog("Error while unblocking (out) " + cidr + " from the Windows Firewall : " + ex.Message);
+            }
+            
+            addLog("Firewall Unblocking (out) " + cidr + " from the Windows Firewall : ");
+
+        }
+
+        private void btnFirewallClearBlockedSubnets_Click(object sender, EventArgs e)
+        {
+            DialogResult dr = MessageBox.Show(this, "Are you sure that you want to remove and unblock all subnet from this list that are currently blocked ?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dr == DialogResult.Yes)
+            {
+                for (int index = 0; index < lstBlockedSubnets.Items.Count; index++)
+                {
+                    String s = lstBlockedSubnets.Items[index].ToString();
+
+                    WindowsFirewallUnblock(s);
+                }
+
+                _windowsFirewallBlockedCIDRs = new Hashtable();
+
+                lstBlockedSubnets.Items.Clear();
+
+                SaveSettingsWindowsFirewallBlockedCIDRs();
+            }
+        }
+
+        private void chkWindowsFirewallBlocking_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveWindowsFirewallSettings();
+
+            MessageBox.Show(this, "The Application will now quit. Please restart the application to apply this setting.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+            this.Close();
         }
     }
 }

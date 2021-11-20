@@ -89,6 +89,18 @@ namespace D2R_CLONEHUNTER
             this.btnSaveSessionToDisk = new System.Windows.Forms.Button();
             this.tmrTextFileCreations = new System.Windows.Forms.Timer(this.components);
             this.btnResetConfiguration = new System.Windows.Forms.Button();
+            this.tabFirewall = new System.Windows.Forms.TabPage();
+            this.label7 = new System.Windows.Forms.Label();
+            this.lstBlockedSubnets = new System.Windows.Forms.ListBox();
+            this.label15 = new System.Windows.Forms.Label();
+            this.btnFirewallClearBlockedSubnets = new System.Windows.Forms.Button();
+            this.btnFirewallBlockSubnet = new System.Windows.Forms.Button();
+            this.btnFirewallClearBlockedSelectedSubnet = new System.Windows.Forms.Button();
+            this.txtFirewallSubnetToBlock = new System.Windows.Forms.TextBox();
+            this.label19 = new System.Windows.Forms.Label();
+            this.ddFirewallSubnetToBlockClass = new System.Windows.Forms.ComboBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.chkWindowsFirewallBlocking = new System.Windows.Forms.CheckBox();
             this.iPAddressDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.occurenceCountDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.d2RIpAddressCountEntityBindingSource = new System.Windows.Forms.BindingSource(this.components);
@@ -101,6 +113,7 @@ namespace D2R_CLONEHUNTER
             this.tabPageStreaming.SuspendLayout();
             this.tabPageApplicationLogs.SuspendLayout();
             this.tabPageStatistics.SuspendLayout();
+            this.tabFirewall.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.d2RIpAddressCountEntityBindingSource)).BeginInit();
             this.SuspendLayout();
             // 
@@ -124,11 +137,12 @@ namespace D2R_CLONEHUNTER
             this.tabPages.Controls.Add(this.tabPageStreaming);
             this.tabPages.Controls.Add(this.tabPageApplicationLogs);
             this.tabPages.Controls.Add(this.tabPageStatistics);
+            this.tabPages.Controls.Add(this.tabFirewall);
             this.tabPages.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tabPages.Location = new System.Drawing.Point(8, 8);
             this.tabPages.Name = "tabPages";
             this.tabPages.SelectedIndex = 0;
-            this.tabPages.Size = new System.Drawing.Size(608, 448);
+            this.tabPages.Size = new System.Drawing.Size(736, 448);
             this.tabPages.TabIndex = 0;
             // 
             // tabPageIPSettings
@@ -147,7 +161,7 @@ namespace D2R_CLONEHUNTER
             this.tabPageIPSettings.Location = new System.Drawing.Point(4, 30);
             this.tabPageIPSettings.Name = "tabPageIPSettings";
             this.tabPageIPSettings.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageIPSettings.Size = new System.Drawing.Size(600, 414);
+            this.tabPageIPSettings.Size = new System.Drawing.Size(728, 414);
             this.tabPageIPSettings.TabIndex = 0;
             this.tabPageIPSettings.Text = "IP Settings";
             // 
@@ -270,7 +284,7 @@ namespace D2R_CLONEHUNTER
             this.tabPageIPLogs.Location = new System.Drawing.Point(4, 30);
             this.tabPageIPLogs.Name = "tabPageIPLogs";
             this.tabPageIPLogs.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageIPLogs.Size = new System.Drawing.Size(600, 414);
+            this.tabPageIPLogs.Size = new System.Drawing.Size(728, 414);
             this.tabPageIPLogs.TabIndex = 1;
             this.tabPageIPLogs.Text = "IP Logs";
             this.tabPageIPLogs.UseVisualStyleBackColor = true;
@@ -332,7 +346,7 @@ namespace D2R_CLONEHUNTER
             this.tabPageOptions.Location = new System.Drawing.Point(4, 30);
             this.tabPageOptions.Name = "tabPageOptions";
             this.tabPageOptions.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageOptions.Size = new System.Drawing.Size(600, 414);
+            this.tabPageOptions.Size = new System.Drawing.Size(728, 414);
             this.tabPageOptions.TabIndex = 2;
             this.tabPageOptions.Text = "Options";
             this.tabPageOptions.UseVisualStyleBackColor = true;
@@ -478,7 +492,7 @@ namespace D2R_CLONEHUNTER
             this.tabPageStreaming.Location = new System.Drawing.Point(4, 30);
             this.tabPageStreaming.Name = "tabPageStreaming";
             this.tabPageStreaming.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageStreaming.Size = new System.Drawing.Size(600, 414);
+            this.tabPageStreaming.Size = new System.Drawing.Size(728, 414);
             this.tabPageStreaming.TabIndex = 5;
             this.tabPageStreaming.Text = "Streaming";
             this.tabPageStreaming.UseVisualStyleBackColor = true;
@@ -566,7 +580,7 @@ namespace D2R_CLONEHUNTER
             this.tabPageApplicationLogs.Location = new System.Drawing.Point(4, 30);
             this.tabPageApplicationLogs.Name = "tabPageApplicationLogs";
             this.tabPageApplicationLogs.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageApplicationLogs.Size = new System.Drawing.Size(600, 414);
+            this.tabPageApplicationLogs.Size = new System.Drawing.Size(728, 414);
             this.tabPageApplicationLogs.TabIndex = 3;
             this.tabPageApplicationLogs.Text = "Application Logs";
             this.tabPageApplicationLogs.UseVisualStyleBackColor = true;
@@ -582,7 +596,7 @@ namespace D2R_CLONEHUNTER
             this.txtApplicationLogs.Multiline = true;
             this.txtApplicationLogs.Name = "txtApplicationLogs";
             this.txtApplicationLogs.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtApplicationLogs.Size = new System.Drawing.Size(584, 400);
+            this.txtApplicationLogs.Size = new System.Drawing.Size(712, 400);
             this.txtApplicationLogs.TabIndex = 60;
             // 
             // tabPageStatistics
@@ -602,7 +616,7 @@ namespace D2R_CLONEHUNTER
             this.tabPageStatistics.Location = new System.Drawing.Point(4, 30);
             this.tabPageStatistics.Name = "tabPageStatistics";
             this.tabPageStatistics.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageStatistics.Size = new System.Drawing.Size(600, 414);
+            this.tabPageStatistics.Size = new System.Drawing.Size(728, 414);
             this.tabPageStatistics.TabIndex = 4;
             this.tabPageStatistics.Text = "Statistics";
             this.tabPageStatistics.UseVisualStyleBackColor = true;
@@ -743,7 +757,7 @@ namespace D2R_CLONEHUNTER
             // 
             this.btnSaveSessionToDisk.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.btnSaveSessionToDisk.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSaveSessionToDisk.Location = new System.Drawing.Point(464, 464);
+            this.btnSaveSessionToDisk.Location = new System.Drawing.Point(592, 464);
             this.btnSaveSessionToDisk.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSaveSessionToDisk.Name = "btnSaveSessionToDisk";
             this.btnSaveSessionToDisk.Size = new System.Drawing.Size(151, 32);
@@ -767,6 +781,145 @@ namespace D2R_CLONEHUNTER
             this.btnResetConfiguration.Text = "Delete && Reset Configuration";
             this.btnResetConfiguration.UseVisualStyleBackColor = true;
             this.btnResetConfiguration.Click += new System.EventHandler(this.btnResetConfiguration_Click);
+            // 
+            // tabFirewall
+            // 
+            this.tabFirewall.Controls.Add(this.chkWindowsFirewallBlocking);
+            this.tabFirewall.Controls.Add(this.label20);
+            this.tabFirewall.Controls.Add(this.ddFirewallSubnetToBlockClass);
+            this.tabFirewall.Controls.Add(this.label19);
+            this.tabFirewall.Controls.Add(this.txtFirewallSubnetToBlock);
+            this.tabFirewall.Controls.Add(this.btnFirewallClearBlockedSelectedSubnet);
+            this.tabFirewall.Controls.Add(this.btnFirewallBlockSubnet);
+            this.tabFirewall.Controls.Add(this.btnFirewallClearBlockedSubnets);
+            this.tabFirewall.Controls.Add(this.label15);
+            this.tabFirewall.Controls.Add(this.label7);
+            this.tabFirewall.Controls.Add(this.lstBlockedSubnets);
+            this.tabFirewall.Location = new System.Drawing.Point(4, 30);
+            this.tabFirewall.Name = "tabFirewall";
+            this.tabFirewall.Size = new System.Drawing.Size(728, 414);
+            this.tabFirewall.TabIndex = 6;
+            this.tabFirewall.Text = "Windows Firewall";
+            this.tabFirewall.UseVisualStyleBackColor = true;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Location = new System.Drawing.Point(16, 120);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(185, 17);
+            this.label7.TabIndex = 88;
+            this.label7.Text = "Blocked IP Addresses Subnet";
+            // 
+            // lstBlockedSubnets
+            // 
+            this.lstBlockedSubnets.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lstBlockedSubnets.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+            this.lstBlockedSubnets.FormattingEnabled = true;
+            this.lstBlockedSubnets.ItemHeight = 21;
+            this.lstBlockedSubnets.Location = new System.Drawing.Point(16, 144);
+            this.lstBlockedSubnets.Name = "lstBlockedSubnets";
+            this.lstBlockedSubnets.ScrollAlwaysVisible = true;
+            this.lstBlockedSubnets.Size = new System.Drawing.Size(240, 172);
+            this.lstBlockedSubnets.TabIndex = 87;
+            // 
+            // label15
+            // 
+            this.label15.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label15.Location = new System.Drawing.Point(16, 48);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(696, 64);
+            this.label15.TabIndex = 89;
+            this.label15.Text = "This feature allow you to specify subnet(s) to block with the windows firewall wh" +
+    "en the application start, and to remove the blocking once the application end in" +
+    " a normal way.";
+            // 
+            // btnFirewallClearBlockedSubnets
+            // 
+            this.btnFirewallClearBlockedSubnets.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnFirewallClearBlockedSubnets.Location = new System.Drawing.Point(272, 144);
+            this.btnFirewallClearBlockedSubnets.Name = "btnFirewallClearBlockedSubnets";
+            this.btnFirewallClearBlockedSubnets.Size = new System.Drawing.Size(176, 32);
+            this.btnFirewallClearBlockedSubnets.TabIndex = 90;
+            this.btnFirewallClearBlockedSubnets.Text = "Unblock All Subnet(s)";
+            this.btnFirewallClearBlockedSubnets.UseVisualStyleBackColor = true;
+            this.btnFirewallClearBlockedSubnets.Click += new System.EventHandler(this.btnFirewallClearBlockedSubnets_Click);
+            // 
+            // btnFirewallBlockSubnet
+            // 
+            this.btnFirewallBlockSubnet.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnFirewallBlockSubnet.Location = new System.Drawing.Point(336, 358);
+            this.btnFirewallBlockSubnet.Name = "btnFirewallBlockSubnet";
+            this.btnFirewallBlockSubnet.Size = new System.Drawing.Size(104, 32);
+            this.btnFirewallBlockSubnet.TabIndex = 91;
+            this.btnFirewallBlockSubnet.Text = "Block Subnet";
+            this.btnFirewallBlockSubnet.UseVisualStyleBackColor = true;
+            this.btnFirewallBlockSubnet.Click += new System.EventHandler(this.btnFirewallBlockSubnet_Click);
+            // 
+            // btnFirewallClearBlockedSelectedSubnet
+            // 
+            this.btnFirewallClearBlockedSelectedSubnet.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnFirewallClearBlockedSelectedSubnet.Location = new System.Drawing.Point(272, 184);
+            this.btnFirewallClearBlockedSelectedSubnet.Name = "btnFirewallClearBlockedSelectedSubnet";
+            this.btnFirewallClearBlockedSelectedSubnet.Size = new System.Drawing.Size(176, 32);
+            this.btnFirewallClearBlockedSelectedSubnet.TabIndex = 92;
+            this.btnFirewallClearBlockedSelectedSubnet.Text = "Unblock Subnet";
+            this.btnFirewallClearBlockedSelectedSubnet.UseVisualStyleBackColor = true;
+            this.btnFirewallClearBlockedSelectedSubnet.Click += new System.EventHandler(this.btnFirewallClearBlockedSelectedSubnet_Click);
+            // 
+            // txtFirewallSubnetToBlock
+            // 
+            this.txtFirewallSubnetToBlock.Location = new System.Drawing.Point(16, 360);
+            this.txtFirewallSubnetToBlock.Name = "txtFirewallSubnetToBlock";
+            this.txtFirewallSubnetToBlock.Size = new System.Drawing.Size(168, 29);
+            this.txtFirewallSubnetToBlock.TabIndex = 93;
+            this.txtFirewallSubnetToBlock.Text = "35.0.0.0";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label19.Location = new System.Drawing.Point(16, 336);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(77, 17);
+            this.label19.TabIndex = 94;
+            this.label19.Text = "IP Address:";
+            // 
+            // ddFirewallSubnetToBlockClass
+            // 
+            this.ddFirewallSubnetToBlockClass.FormattingEnabled = true;
+            this.ddFirewallSubnetToBlockClass.Items.AddRange(new object[] {
+            "/8 (x.*.*.*)",
+            "/16 (x.x.*.*)",
+            "/24 (x.x.x.*)",
+            "/32 (x.x.x.x)"});
+            this.ddFirewallSubnetToBlockClass.Location = new System.Drawing.Point(192, 360);
+            this.ddFirewallSubnetToBlockClass.Name = "ddFirewallSubnetToBlockClass";
+            this.ddFirewallSubnetToBlockClass.Size = new System.Drawing.Size(128, 29);
+            this.ddFirewallSubnetToBlockClass.TabIndex = 95;
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label20.Location = new System.Drawing.Point(192, 336);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(90, 17);
+            this.label20.TabIndex = 96;
+            this.label20.Text = "Subnet Class:";
+            // 
+            // chkWindowsFirewallBlocking
+            // 
+            this.chkWindowsFirewallBlocking.AutoSize = true;
+            this.chkWindowsFirewallBlocking.Location = new System.Drawing.Point(16, 16);
+            this.chkWindowsFirewallBlocking.Name = "chkWindowsFirewallBlocking";
+            this.chkWindowsFirewallBlocking.Size = new System.Drawing.Size(668, 25);
+            this.chkWindowsFirewallBlocking.TabIndex = 97;
+            this.chkWindowsFirewallBlocking.Text = "Use the Windows Firewall Blocking Feature (Only work if you use Windows Firewall)" +
+    "";
+            this.chkWindowsFirewallBlocking.UseVisualStyleBackColor = true;
+            this.chkWindowsFirewallBlocking.CheckedChanged += new System.EventHandler(this.chkWindowsFirewallBlocking_CheckedChanged);
             // 
             // iPAddressDataGridViewTextBoxColumn
             // 
@@ -796,7 +949,7 @@ namespace D2R_CLONEHUNTER
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.ClientSize = new System.Drawing.Size(625, 503);
+            this.ClientSize = new System.Drawing.Size(753, 503);
             this.Controls.Add(this.btnResetConfiguration);
             this.Controls.Add(this.btnSaveSessionToDisk);
             this.Controls.Add(this.tabPages);
@@ -826,6 +979,8 @@ namespace D2R_CLONEHUNTER
             this.tabPageApplicationLogs.ResumeLayout(false);
             this.tabPageApplicationLogs.PerformLayout();
             this.tabPageStatistics.ResumeLayout(false);
+            this.tabFirewall.ResumeLayout(false);
+            this.tabFirewall.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.d2RIpAddressCountEntityBindingSource)).EndInit();
             this.ResumeLayout(false);
 
@@ -891,6 +1046,18 @@ namespace D2R_CLONEHUNTER
         private System.Windows.Forms.Button btnResetConfiguration;
         private System.Windows.Forms.CheckBox chkSaveLoggedIPAddressesAccrossRestart;
         private System.Windows.Forms.CheckBox chkSaveTotalGamesAndTotalTimeAcrossRestart;
+        private System.Windows.Forms.TabPage tabFirewall;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.ListBox lstBlockedSubnets;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.ComboBox ddFirewallSubnetToBlockClass;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.TextBox txtFirewallSubnetToBlock;
+        private System.Windows.Forms.Button btnFirewallClearBlockedSelectedSubnet;
+        private System.Windows.Forms.Button btnFirewallBlockSubnet;
+        private System.Windows.Forms.Button btnFirewallClearBlockedSubnets;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.CheckBox chkWindowsFirewallBlocking;
     }
 }
 

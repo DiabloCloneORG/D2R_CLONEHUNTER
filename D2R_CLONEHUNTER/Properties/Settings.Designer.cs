@@ -190,5 +190,29 @@ namespace D2R_CLONEHUNTER.Properties {
                 this["TotalGamesJoined"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UseWindowsFirewallBlocking {
+            get {
+                return ((bool)(this["UseWindowsFirewallBlocking"]));
+            }
+            set {
+                this["UseWindowsFirewallBlocking"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BlockedCIDRs {
+            get {
+                return ((string)(this["BlockedCIDRs"]));
+            }
+            set {
+                this["BlockedCIDRs"] = value;
+            }
+        }
     }
 }
