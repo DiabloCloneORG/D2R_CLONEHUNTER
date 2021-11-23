@@ -214,5 +214,53 @@ namespace D2R_CLONEHUNTER.Properties {
                 this["BlockedCIDRs"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string AllowedCIDRs {
+            get {
+                return ((string)(this["AllowedCIDRs"]));
+            }
+            set {
+                this["AllowedCIDRs"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool QuickRestartD2R {
+            get {
+                return ((bool)(this["QuickRestartD2R"]));
+            }
+            set {
+                this["QuickRestartD2R"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\Program Files (x86)\\Diablo II Resurrected\\Diablo II Resurrected Launcher.exe")]
+        public string D2RLauncherPath {
+            get {
+                return ((string)(this["D2RLauncherPath"]));
+            }
+            set {
+                this["D2RLauncherPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool KeepOnTop {
+            get {
+                return ((bool)(this["KeepOnTop"]));
+            }
+            set {
+                this["KeepOnTop"] = value;
+            }
+        }
     }
 }

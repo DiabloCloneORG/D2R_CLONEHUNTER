@@ -50,5 +50,17 @@
     <Setting Name="BlockedCIDRs" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="AllowedCIDRs" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="QuickRestartD2R" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="D2RLauncherPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\Program Files (x86)\Diablo II Resurrected\Diablo II Resurrected Launcher.exe</Value>
+    </Setting>
+    <Setting Name="KeepOnTop" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

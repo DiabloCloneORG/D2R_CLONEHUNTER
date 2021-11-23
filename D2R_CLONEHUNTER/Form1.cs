@@ -23,8 +23,14 @@ namespace D2R_CLONEHUNTER
     public partial class Form1 : Form
     {
 
+        frmCidrSelector _frmCidrSelectorBlock; 
+        frmCidrSelector _frmCidrSelectorAllow;
+
+        frmIpRangeSelector _frmIpRangeSelectorBlock;
+        frmIpRangeSelector _frmIpRangeSelectorAllow;
+
         /* SETTINGS SECTION */
-        
+
 
 
         private D2R_IpAddressCountComparer _LoggedIPComparer;
@@ -33,7 +39,7 @@ namespace D2R_CLONEHUNTER
 
         private uint _CurrentVolume = 0;
 
-        private  int _TotalGamesJoined = 0;
+        private int _TotalGamesJoined = 0;
 
         private bool _flagInGame = false;
         private string _lastInGameIPAddress = "";
@@ -47,6 +53,7 @@ namespace D2R_CLONEHUNTER
         private Hashtable _activeIPAddresses = new Hashtable();
 
         private Hashtable _windowsFirewallBlockedCIDRs = new Hashtable();
+        private Hashtable _windowsFirewallAllowedCIDRs = new Hashtable();
 
         [DllImport("winmm.dll")]
         public static extern int waveOutGetVolume(IntPtr hwo, out uint dwVolume);
@@ -211,7 +218,7 @@ namespace D2R_CLONEHUNTER
             }
         }
 
-        
+
 
         public static List<MIB_TCPROW_OWNER_PID> GetAllTCPConnections()
         {
@@ -320,11 +327,22 @@ namespace D2R_CLONEHUNTER
             }
             else
             {
-                _applicationStartedOn = Settings.Default.TotalTimeStartDateTime;
+                if (Settings.Default.TotalTimeStartDateTime == (new DateTime(2000, 1, 1, 0, 0, 0)))
+                {
+                    _applicationStartedOn = DateTime.Now;
+                    Settings.Default.TotalTimeStartDateTime = _applicationStartedOn;
+                    Settings.Default.Save();
+                    Settings.Default.Reload();
+                }
+                else
+                {
+                    _applicationStartedOn = Settings.Default.TotalTimeStartDateTime;
+                }
+                
                 _TotalGamesJoined = Settings.Default.TotalGamesJoined;
             }
 
-            
+
 
 
 
@@ -345,25 +363,23 @@ namespace D2R_CLONEHUNTER
             _LoggedIPComparer = new D2R_IpAddressCountComparer();
             _LoggedIPComparer.SortDirection = D2R_IpAddressCountComparer.D2RIpAddressCountSortOrder.Descending;
             _LoggedIPComparer.WhichComparison = D2R_IpAddressCountComparer.D2RIpAddressCountComparisonType.OccurenceCount;
-            
+
             _LoggedIPAddressEntities = new List<D2R_IpAddressCountEntity>();
             _LoggedIPOccurences = new List<D2R_IpAddressOccurenceEntity>();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            
+
         }
 
         private bool isIpAddressExcluded(string needle_ipaddress)
         {
-            return _excludedIPAddresses.ContainsKey(needle_ipaddress); 
+            return _excludedIPAddresses.ContainsKey(needle_ipaddress);
         }
 
         private void refreshTable()
         {
-            lblCurrentIP.Text = "Checking...";
-
             System.Text.StringBuilder builder = new System.Text.StringBuilder();
             Process p = null;
             _activeIPAddresses = new Hashtable();
@@ -377,59 +393,99 @@ namespace D2R_CLONEHUNTER
                     if (p.ProcessName.ToLowerInvariant() != "d2r") { continue; }
                     if (pid.State != MIB_TCP_STATE.MIB_TCP_STATE_ESTAB) { continue; }
                     if (pid.RemoteAddress.ToString() == "127.0.0.1") { continue; }
-                    if (pid.RemoteAddress.ToString() == "34.117.122.6") { continue; }
+                    if (pid.RemoteAddress.ToString().StartsWith("34.117.122")) { continue; }
+                    if (pid.RemoteAddress.ToString().StartsWith("24.105.29")) { continue; }
+                    if (pid.RemoteAddress.ToString().StartsWith("37.244.28")) { continue; }
+                    if (pid.RemoteAddress.ToString().StartsWith("37.244.54")) { continue; }
+                    if (pid.RemoteAddress.ToString().StartsWith("117.52.35")) { continue; }
+                    if (pid.RemoteAddress.ToString().StartsWith("137.221.105")) { continue; }
+                    if (pid.RemoteAddress.ToString().StartsWith("137.221.106")) { continue; }
 
-                    if (pid.RemoteAddress.ToString().StartsWith("24.105.")) { continue; }
-                    if (pid.RemoteAddress.ToString().StartsWith("137.")) { continue; }
+                    /* IP Addresses Connections Found While Being Outside of a Game (IE: while in lobby, or char select screen) */
+
+                    /* North America */
+                    if (pid.RemoteAddress.ToString()=="34.95.148.93") { continue; }
+                    if (pid.RemoteAddress.ToString()=="35.224.190.107") { continue; }
+                    if (pid.RemoteAddress.ToString()=="35.198.33.20") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.125.178.230") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.106.220.198") { continue; }
+                    if (pid.RemoteAddress.ToString()=="35.198.9.161") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.125.192.178") { continue; }
+                    if (pid.RemoteAddress.ToString()=="35.203.90.248") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.106.157.7") { continue; }
+                    if (pid.RemoteAddress.ToString()=="35.184.165.43") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.95.254.42") { continue; }
+                    if (pid.RemoteAddress.ToString()=="35.236.78.59") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.106.46.242") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.125.187.42") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.127.3.170") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.83.221.205") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.145.246.88") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.106.138.112") { continue; }
+                    if (pid.RemoteAddress.ToString()=="35.198.38.221") { continue; }
+                    if (pid.RemoteAddress.ToString()=="34.150.253.5") { continue; }
+                    if (pid.RemoteAddress.ToString()=="35.247.120.89") { continue; }
+                    if (pid.RemoteAddress.ToString()=="158.115.222.213") { continue; }
+                    if (pid.RemoteAddress.ToString()=="158.115.222.235") { continue; }
+                    if (pid.RemoteAddress.ToString() == "35.203.49.62") { continue; }
+                    if (pid.RemoteAddress.ToString() == "35.244.75.115") { continue; }
+                    if (pid.RemoteAddress.ToString() == "158.115.222.192") { continue; }
+                    if (pid.RemoteAddress.ToString() == "34.106.62.192") { continue; }
+                    if (pid.RemoteAddress.ToString() == "34.83.204.197") { continue; }
+                    if (pid.RemoteAddress.ToString() == "34.145.56.105") { continue; }
+
+                    
+
+
+
                     if (pid.RemotePort.ToString() == "1119") { continue; }
 
 
                     if (_excludedIPAddresses.ContainsKey(pid.RemoteAddress.ToString())) { continue; }
-
-
 
                     if (!_activeIPAddresses.ContainsKey(pid.RemoteAddress.ToString()))
                     {
                         _activeIPAddresses.Add(pid.RemoteAddress.ToString(), 1);
                     }
                 }
-                catch 
+                catch
                 {
 
                 }
             }
-            
+
             lstActiveIPs.Items.Clear();
             foreach (DictionaryEntry de in _activeIPAddresses) { lstActiveIPs.Items.Add(de.Key.ToString()); }
 
             if (_activeIPAddresses.Count < 1)
             {
-                lblCurrentIP.Text = "Not in a Game ?";
+                // lblCurrentIP.Text = "Not in a Game ?";
 
-                if (_flagInGame==true)
+                if (_flagInGame == true)
                 { // We were in a game, and we seem to have left that game ip.
                     _flagInGame = false;
 
-                    if (_lastInGameIPAddress.Length>0) 
+                    if (_lastInGameIPAddress.Length > 0)
                     {
                         addLog("Game has been exited on " + _lastInGameIPAddress);
                         _lastInGameIPAddress = "";
                     }
-                    else 
+                    else
                     {
                         addLog("Game has been exited");
                     }
-                    
+
                 }
             }
             else if (_activeIPAddresses.Count == 1)
             { // We may have joined a game
-                if (_flagInGame==false)
+                if (_flagInGame == false || lstActiveIPs.Items[0].ToString() != _lastInGameIPAddress)
                 { // This confirm we have just joined a game
                     _lastInGameIPAddress = lstActiveIPs.Items[0].ToString();
                     _flagInGame = true;
 
-                    addLog("Game has been join on " + _lastInGameIPAddress);
+                    addLog("IP Address Detected: ");
+                    addLog("-> " + _lastInGameIPAddress);
 
                     _lastGameJoinedOn = DateTime.Now;
                     _TotalGamesJoined++;
@@ -443,7 +499,7 @@ namespace D2R_CLONEHUNTER
 
                     _LoggedIPOccurences.Add(new D2R_IpAddressOccurenceEntity(_lastInGameIPAddress, DateTime.Now));
 
-                    if (txtDesiredIPAddress.Text.ToLowerInvariant()==_lastInGameIPAddress.ToLowerInvariant())
+                    if (txtDesiredIPAddress.Text.ToLowerInvariant() == _lastInGameIPAddress.ToLowerInvariant())
                     {
                         try
                         {
@@ -453,6 +509,10 @@ namespace D2R_CLONEHUNTER
                         catch { }
 
                         addLog(">>> >>> GAME HAS BEEN FOUND ON THE RIGHT IP <<< <<<");
+                    }
+                    else
+                    {
+
                     }
 
                     if (_loggedIPAddresses.ContainsKey(_lastInGameIPAddress))
@@ -466,7 +526,8 @@ namespace D2R_CLONEHUNTER
 
                     gvLoggedIPs.DataSource = null;
                     _LoggedIPAddressEntities = new List<D2R_IpAddressCountEntity>();
-                    foreach (DictionaryEntry de in _loggedIPAddresses) {
+                    foreach (DictionaryEntry de in _loggedIPAddresses)
+                    {
                         D2R_IpAddressCountEntity _entity = new D2R_IpAddressCountEntity() { IPAddress = de.Key.ToString(), OccurenceCount = Int32.Parse(de.Value.ToString()) };
                         _LoggedIPAddressEntities.Add(_entity);
                     }
@@ -483,7 +544,11 @@ namespace D2R_CLONEHUNTER
             }
             else if (_activeIPAddresses.Count > 1)
             {
-                lblCurrentIP.Text = "Exclusion ?";
+                addLog("WARNING: Multiple IP Addresses Established Connections Detected: ");
+                foreach (DictionaryEntry de in _activeIPAddresses)
+                {
+                    addLog("-> " + de.Key.ToString());
+                }
             }
 
             if (p != null)
@@ -500,7 +565,7 @@ namespace D2R_CLONEHUNTER
             lblStatisticsTotalUniqueIPs.Text = _LoggedIPAddressEntities.Count.ToString();
             lblStatisticsStartedOn.Text = _applicationStartedOn.ToString("yyyy-MM-dd HH:mm:ss");
             TimeSpan ts = DateTime.Now - _applicationStartedOn;
-            lblStatisticsDuration.Text = 
+            lblStatisticsDuration.Text =
                 Math.Round(ts.TotalMinutes, 0) + " minute" + ((Math.Round(ts.TotalMinutes, 0) > 1) ? "s" : "");
 
             List<D2R_IpAddressCountEntity> _entities_copy = new List<D2R_IpAddressCountEntity>();
@@ -512,7 +577,7 @@ namespace D2R_CLONEHUNTER
             };
             _entities_copy.Sort(_entities_copy_comparer);
 
-            if (_entities_copy.Count>0)
+            if (_entities_copy.Count > 0)
             {
                 lblStatisticsMostSeenIP.Text = _entities_copy[0].IPAddress;
             }
@@ -521,7 +586,7 @@ namespace D2R_CLONEHUNTER
                 lblStatisticsMostSeenIP.Text = "N/A";
             }
         }
-            
+
 
 
 
@@ -535,20 +600,29 @@ namespace D2R_CLONEHUNTER
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            if ( IsAdministrator() == false && Settings.Default.UseWindowsFirewallBlocking)
+            if (IsAdministrator() == false && 
+                (Settings.Default.UseWindowsFirewallBlocking || Settings.Default.QuickRestartD2R) && !Debugger.IsAttached)
             {
-                // Restart program and run as admin
-                var exeName = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
-                ProcessStartInfo startInfo = new ProcessStartInfo(exeName);
-                startInfo.Verb = "runas";
-                System.Diagnostics.Process.Start(startInfo);
+                try
+                {
+                    // Restart program and run as admin
+                    var exeName = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+                    ProcessStartInfo startInfo = new ProcessStartInfo(exeName);
+                    startInfo.Verb = "runas";
+                    System.Diagnostics.Process.Start(startInfo);
+                }
+                catch (Exception ex) 
+                {
+                    MessageBox.Show(this, "The Application failed to restart in Administrator Mode.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
                 Application.Exit();
                 return;
             }
 
             lblCurrentIP.Text = "Initializing";
 
-            this.Text = "DiabloClone.ORG CLONEHUNTER v"+ Application.ProductVersion + " - Discord Server @ https://discord.gg/FQrpzV8Smv";
+            this.Text = "DiabloClone.ORG CLONEHUNTER v" + Application.ProductVersion + " - Discord Server @ https://discord.gg/FQrpzV8Smv";
             addLog("Application has Started.");
             addLog("Application version is : " + Application.ProductVersion);
 
@@ -566,7 +640,7 @@ namespace D2R_CLONEHUNTER
             lblStatisticsTotalGames.Text = "N/A";
             lblStatisticsTotalUniqueIPs.Text = "N/A";
             lblStatisticsStartedOn.Text = "N/A";
-            lblStatisticsMostSeenIP .Text = "N/A";
+            lblStatisticsMostSeenIP.Text = "N/A";
             lblStatisticsDuration.Text = "N/A";
 
 
@@ -582,9 +656,13 @@ namespace D2R_CLONEHUNTER
 
             if (Settings.Default.UseWindowsFirewallBlocking)
             {
+                ReloadSettingsWindowsFirewallAllowedCIDRs();
+                lstFirewallAllowedSubnet.Items.Clear();
+                foreach (DictionaryEntry de in _windowsFirewallAllowedCIDRs) { lstFirewallAllowedSubnet.Items.Add(de.Key.ToString()); }
+
                 ReloadSettingsWindowsFirewallBlockedCIDRs();
-                lstBlockedSubnets.Items.Clear();
-                foreach (DictionaryEntry de in _windowsFirewallBlockedCIDRs) { lstBlockedSubnets.Items.Add(de.Key.ToString()); }
+                lstFirewallBlockedSubnets.Items.Clear();
+                foreach (DictionaryEntry de in _windowsFirewallBlockedCIDRs) { lstFirewallBlockedSubnets.Items.Add(de.Key.ToString()); }
             }
         }
 
@@ -698,11 +776,31 @@ namespace D2R_CLONEHUNTER
                 trackVolumeChaching.ValueChanged -= trackVolumeChaching_ValueChanged;
                 trackVolumeChaching.Value = Settings.Default.VolumeChaching;
                 trackVolumeChaching.ValueChanged += trackVolumeChaching_ValueChanged;
+
+                chkQuickRestartD2R.CheckedChanged -= chkQuickRestartD2R_CheckedChanged;
+                chkQuickRestartD2R.Checked = Settings.Default.QuickRestartD2R;
+                chkQuickRestartD2R.CheckedChanged += chkQuickRestartD2R_CheckedChanged;
+                
+                btnKillAndRestartD2R.Enabled = Settings.Default.QuickRestartD2R;
+
+
+                txtD2RLauncherPath.TextChanged -= txtD2RLauncherPath_TextChanged;
+                txtD2RLauncherPath.Text = Settings.Default.D2RLauncherPath;
+                txtD2RLauncherPath.TextChanged += txtD2RLauncherPath_TextChanged;
+
+
+                chkKeepOnTop.CheckedChanged -= chkKeepOnTop_CheckedChanged;
+                chkKeepOnTop.Checked = Settings.Default.KeepOnTop;
+                chkKeepOnTop.CheckedChanged += chkKeepOnTop_CheckedChanged;
+
+
+
+                this.TopMost = Settings.Default.KeepOnTop;
             }
             catch
             {
                 MessageBox.Show(this,
-                    "An error occured while loading the configuration (General Options section).\r\n\r\n"+
+                    "An error occured while loading the configuration (General Options section).\r\n\r\n" +
                         "Please make sure you have the latest version with all the necessary included files.",
                     "Configuration Error",
                     MessageBoxButtons.OK,
@@ -721,6 +819,9 @@ namespace D2R_CLONEHUNTER
                 Settings.Default.VolumeChaching = trackVolumeChaching.Value;
                 Settings.Default.SaveTotalGamesAndTotalTimeAcrossRestart = chkSaveTotalGamesAndTotalTimeAcrossRestart.Checked;
                 Settings.Default.SaveLoggedIPAddressesAcrossRestart = chkSaveLoggedIPAddressesAccrossRestart.Checked;
+                Settings.Default.QuickRestartD2R = chkQuickRestartD2R.Checked;
+                Settings.Default.D2RLauncherPath = txtD2RLauncherPath.Text;
+                Settings.Default.KeepOnTop = chkKeepOnTop.Checked;
 
                 Settings.Default.Save();
                 Settings.Default.Reload();
@@ -782,7 +883,7 @@ namespace D2R_CLONEHUNTER
             /* Attempt to Cleanup Old Blocked CIDRs if any are present */
             if (_windowsFirewallBlockedCIDRs != null)
             {
-                if (_windowsFirewallBlockedCIDRs.Count>0)
+                if (_windowsFirewallBlockedCIDRs.Count > 0)
                 {
                     foreach (DictionaryEntry de in _windowsFirewallBlockedCIDRs)
                     {
@@ -799,7 +900,7 @@ namespace D2R_CLONEHUNTER
                 if (Settings.Default.BlockedCIDRs.Length > 0)
                 {
                     /* Create an array with the (possible) ip addresses set in the setting file */
-                    string[] lBlockedCIDRs  = Settings.Default.BlockedCIDRs.Split(',');
+                    string[] lBlockedCIDRs = Settings.Default.BlockedCIDRs.Split(',');
 
                     /* Check if we got any element in our array. */
                     if (lBlockedCIDRs.Length > 0)
@@ -822,6 +923,61 @@ namespace D2R_CLONEHUNTER
                                             _windowsFirewallBlockedCIDRs.Add(lCIDRString, 1);
 
                                             WindowsFirewallBlock(lCIDRString);
+                                        }
+                                    }
+                                }
+                            }
+                            catch { }
+                        }
+                    }
+                }
+            }
+        }
+        private void ReloadSettingsWindowsFirewallAllowedCIDRs()
+        {
+            /* Attempt to Cleanup Old Blocked CIDRs if any are present */
+            if (_windowsFirewallAllowedCIDRs!= null)
+            {
+                if (_windowsFirewallAllowedCIDRs.Count > 0)
+                {
+                    foreach (DictionaryEntry de in _windowsFirewallAllowedCIDRs)
+                    {
+                        string cidr = (string)de.Key;
+                        WindowsFirewallUnallow(cidr);
+                    }
+                }
+            }
+
+            _windowsFirewallAllowedCIDRs = new Hashtable();
+
+            if (Settings.Default.AllowedCIDRs != null)
+            {
+                if (Settings.Default.AllowedCIDRs.Length > 0)
+                {
+                    /* Create an array with the (possible) ip addresses set in the setting file */
+                    string[] lAllowedCIDRs = Settings.Default.AllowedCIDRs.Split(',');
+
+                    /* Check if we got any element in our array. */
+                    if (lAllowedCIDRs.Length > 0)
+                    {
+                        /* Iterate through each elements found to process em */
+                        foreach (string lCIDRString in lAllowedCIDRs)
+                        {
+                            try
+                            {
+                                /* Try to parse the element string into an IP Address Object. */
+                                string[] cidr = lCIDRString.Split('/');
+                                if (cidr.Length == 2)
+                                {
+                                    IPAddress lIPAddress = null;
+                                    if (System.Net.IPAddress.TryParse(cidr[0], out lIPAddress))
+                                    {
+                                        /* Make sure we are not adding a duplicate to our internal hashtable */
+                                        if (!_windowsFirewallAllowedCIDRs.ContainsKey(lCIDRString))
+                                        {
+                                            _windowsFirewallAllowedCIDRs.Add(lCIDRString, 1);
+
+                                            WindowsFirewallAllow(lCIDRString);
                                         }
                                     }
                                 }
@@ -870,7 +1026,41 @@ namespace D2R_CLONEHUNTER
 
             ReloadSettingsWindowsFirewallBlockedCIDRs();
         }
+        private void SaveSettingsWindowsFirewallAllowedCIDRs()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (DictionaryEntry de in _windowsFirewallAllowedCIDRs)
+                {
+                    string cidr = (string)de.Key;
+                    sb.Append(cidr);
+                    sb.Append(",");
+                }
 
+                String sbout = sb.ToString();
+                if (sbout.EndsWith(",")) { sbout = sbout.TrimEnd(','); }
+
+                Settings.Default.AllowedCIDRs = sbout;
+                Settings.Default.Save();
+                Settings.Default.Reload();
+
+                sb.Clear();
+                sbout = null;
+
+            }
+            catch
+            {
+                MessageBox.Show(this,
+                    "An error occured while saving the configuration (Windows Firewall Allowed CIDRs section).\r\n\r\n" +
+                        "Please make sure you have the latest version with all the necessary included files.",
+                    "Configuration Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+
+            ReloadSettingsWindowsFirewallBlockedCIDRs();
+        }
 
 
 
@@ -931,7 +1121,7 @@ namespace D2R_CLONEHUNTER
 
                 sb.Clear();
                 sbout = null;
-                
+
             }
             catch
             {
@@ -1038,7 +1228,7 @@ namespace D2R_CLONEHUNTER
                 // When the callback completes, it can wake up this thread.
                 pingSender.SendAsync("blizzard.com", timeout, buffer, options, waiter);
             }
-            catch 
+            catch
             {
 
             }
@@ -1103,7 +1293,7 @@ namespace D2R_CLONEHUNTER
             }
 
 
-            
+
         }
 
         private void btnBuildExclusion_Click(object sender, EventArgs e)
@@ -1160,7 +1350,7 @@ namespace D2R_CLONEHUNTER
 
             int textlimit = 32768;
 
-            txtApplicationLogs.Text = txtApplicationLogs.Text + "["+DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "]  " + data + "\r\n";
+            txtApplicationLogs.Text = txtApplicationLogs.Text + "[" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "]  " + data + "\r\n";
             txtApplicationLogs.Select(txtApplicationLogs.TextLength, 0);
             txtApplicationLogs.ScrollToCaret();
 
@@ -1190,7 +1380,7 @@ namespace D2R_CLONEHUNTER
             sb.AppendLine("Application Version: " + Application.ProductVersion);
             sb.AppendLine("");
 
-            sb.AppendLine("Show Timer Ticks: " + (chkShowTicks.Checked?"Yes":"No"));
+            sb.AppendLine("Show Timer Ticks: " + (chkShowTicks.Checked ? "Yes" : "No"));
             sb.AppendLine("Auto Trim Logs: " + (chkAutoTrimLogs.Checked ? "Yes" : "No"));
             sb.AppendLine("");
 
@@ -1203,7 +1393,7 @@ namespace D2R_CLONEHUNTER
             sb.AppendLine("");
 
             sb.AppendLine("Logged IPs: ");
-            foreach (DictionaryEntry de in _loggedIPAddresses) { sb.AppendLine(de.Key.ToString() +" --> "+de.Value.ToString() + " times."); }
+            foreach (DictionaryEntry de in _loggedIPAddresses) { sb.AppendLine(de.Key.ToString() + " --> " + de.Value.ToString() + " times."); }
             sb.AppendLine("");
 
             sb.AppendLine("Latest Application Logs: ");
@@ -1223,7 +1413,7 @@ namespace D2R_CLONEHUNTER
 
                 MessageBox.Show(this, "Exported to " + filename, "Confirmation", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button1);
             }
-            catch 
+            catch
             {
 
             }
@@ -1236,8 +1426,8 @@ namespace D2R_CLONEHUNTER
         {
             System.Media.SoundPlayer my_wave_file = new System.Media.SoundPlayer(D2R_CLONEHUNTER.Properties.Resources.cash2);
             my_wave_file.PlaySync();
-            
-            
+
+
         }
 
         private void trackVolumeChaching_Scroll(object sender, EventArgs e)
@@ -1269,7 +1459,7 @@ namespace D2R_CLONEHUNTER
                 {
                     case 0: { currentType = D2R_IpAddressCountComparer.D2RIpAddressCountComparisonType.IPAddress; break; }
                     case 1: { currentType = D2R_IpAddressCountComparer.D2RIpAddressCountComparisonType.OccurenceCount; break; }
-                    
+
                 }
 
 
@@ -1292,7 +1482,7 @@ namespace D2R_CLONEHUNTER
             }
             catch
             {
-                
+
             }
         }
 
@@ -1344,7 +1534,7 @@ namespace D2R_CLONEHUNTER
             {
                 File.WriteAllText("totalgames.txt", _TotalGamesJoined.ToString());
             }
-            catch 
+            catch
             {
 
             }
@@ -1363,7 +1553,7 @@ namespace D2R_CLONEHUNTER
 
                     text =
                         (timespan.Days > 0 ? timespan.Days.ToString() : "0") + ":" +
-                        (timespan.Hours > 0 ? timespan.Hours.ToString().PadLeft(2,'0') : "00") + ":" +
+                        (timespan.Hours > 0 ? timespan.Hours.ToString().PadLeft(2, '0') : "00") + ":" +
                         (timespan.Minutes > 0 ? timespan.Minutes.ToString().PadLeft(2, '0') : "00") + ":" +
                         (timespan.Seconds > 0 ? timespan.Seconds.ToString().PadLeft(2, '0') : "00") + ":" +
                         (timespan.Milliseconds > 0 ? timespan.Milliseconds.ToString().PadLeft(3, '0') : "000");
@@ -1376,7 +1566,7 @@ namespace D2R_CLONEHUNTER
 
                 File.WriteAllText("runtime.txt", text);
             }
-            catch 
+            catch
             {
 
             }
@@ -1492,12 +1682,12 @@ namespace D2R_CLONEHUNTER
 
                 foreach (var dir in directories)
                 {
-                    try { Directory.Delete(dir, true); } 
-                    catch (Exception ex) 
+                    try { Directory.Delete(dir, true); }
+                    catch (Exception ex)
                     {
                         Console.WriteLine(ex.Message);
                     }
-                }                
+                }
             }
             Application.Restart();
         }
@@ -1544,81 +1734,66 @@ namespace D2R_CLONEHUNTER
             }
         }
 
-        private void btnFirewallBlockSubnet_Click(object sender, EventArgs e)
+
+
+        private void txtD2RLauncherPath_TextChanged(object sender, EventArgs e)
         {
-            System.Net.IPAddress lIpAddress;
+            SaveSettingsGenerals();
+        }
+
+        private void chkKeepOnTop_CheckedChanged(object sender, EventArgs e)
+        {
+            SaveSettingsGenerals();
+
+            this.TopMost = Settings.Default.KeepOnTop;
+        }
+
+        private void btnKillAndRestartD2R_Click(object sender, EventArgs e)
+        {
             try
             {
-                if (!System.Net.IPAddress.TryParse(txtFirewallSubnetToBlock.Text, out lIpAddress))
+                if (Settings.Default.QuickRestartD2R == true && IsAdministrator())
                 {
-                    MessageBox.Show(this, "The provided IP Address is invalid. Please enter a valid IP address in the textbox to block", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+
+                    Process[] processes = Process.GetProcessesByName("D2R");
+                    if (processes.Length < 1)
+                    {
+                        addLog("ERROR: We can't find any D2R.exe running to restart ?!");
+                    }
+                    else if (processes.Length == 1)
+                    {
+                        addLog("OK, Killing D2R Client...");
+                        processes[0].Kill();
+                        processes[0].WaitForExit();
+
+                        addLog("Killed! Waiting 6 seconds...");
+                        Thread.Sleep(6000);
+
+                        addLog("Starting new D2R Client !");
+                        Process newprocess = Process.Start(Settings.Default.D2RLauncherPath, "--exec=\"launch OSI\"");
+                    }
+                    else
+                    {
+                        addLog("ERROR: There is more than one (1) D2R Client open, so to be safe, we are not going to restart all of em.");
+                    }
                 }
             }
-            catch 
-            {
-                MessageBox.Show(this, "The provided IP Address is invalid. Please enter a valid IP address in the textbox to block", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            String lSubnetClass = "";
-            if (ddFirewallSubnetToBlockClass.SelectedIndex < 0)
-            {
-                MessageBox.Show(this, "You need to select a subnet class to block an ip address.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            else
-            {
-                switch (ddFirewallSubnetToBlockClass.SelectedIndex)
-                {
-                    case 0: { lSubnetClass = "/8"; break; }
-                    case 1: { lSubnetClass = "/16"; break; }
-                    case 2: { lSubnetClass = "/24"; break; }
-                    case 3: { lSubnetClass = "/32"; break; }
-                    default: { lSubnetClass = "/32"; break; }
-                }
-            }
-
-            String cidr = lIpAddress.ToString() + lSubnetClass;
-            if (_windowsFirewallBlockedCIDRs.ContainsKey(cidr))
-            {
-                MessageBox.Show(this, "The provided IP Address Block (Subnet/CIDR) already exist in the blocked list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            _windowsFirewallBlockedCIDRs.Add(cidr, 1);
-            lstBlockedSubnets.Items.Add(cidr);
-
-            WindowsFirewallBlock(cidr);
-
-            SaveSettingsWindowsFirewallBlockedCIDRs();
-
-            txtFirewallSubnetToBlock.Text = "";
-            ddFirewallSubnetToBlockClass.SelectedIndex = -1;
+            catch { }
         }
 
-        private void btnFirewallClearBlockedSelectedSubnet_Click(object sender, EventArgs e)
+        private void chkQuickRestartD2R_CheckedChanged(object sender, EventArgs e)
         {
-            if (lstBlockedSubnets.SelectedIndex<0)
-            {
-                MessageBox.Show(this, "You need to select a blocked subnet in the list to unblock it.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            else
-            {
-                String lSelectedListElement = (String)lstBlockedSubnets.Items[lstBlockedSubnets.SelectedIndex].ToString();
+            SaveSettingsGenerals();
 
-                WindowsFirewallUnblock(lSelectedListElement);
-
-                lstBlockedSubnets.Items.RemoveAt(lstBlockedSubnets.SelectedIndex);
-
-                _windowsFirewallBlockedCIDRs.Remove(lSelectedListElement);
-
-                SaveSettingsWindowsFirewallBlockedCIDRs();
-
-            }
+            btnKillAndRestartD2R.Enabled = chkQuickRestartD2R.Checked;
         }
 
+
+
+
+        /********************/
+        /** FIREWALL : MISC */
+        /********************/
         private void WindowsFirewallBlock(string cidr)
         {
             try
@@ -1668,15 +1843,15 @@ namespace D2R_CLONEHUNTER
                 psi_in.CreateNoWindow = true;
                 System.Diagnostics.Process.Start(psi_in);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 addLog("Error while unblocking (in) " + cidr + " from the Windows Firewall : " + ex.Message);
             }
-            
+
             addLog("Firewall Unblocking (in) " + cidr + " from the Windows Firewall : ");
 
             try
-            { 
+            {
                 String arguments_out = "advfirewall firewall delete rule name=\"DC_CLONEHUNTER IPs BLOCKING\" remoteip=" + cidr + " dir=out";
                 ProcessStartInfo psi_out = new ProcessStartInfo("netsh", arguments_out);
                 psi_out.RedirectStandardOutput = true;
@@ -1688,29 +1863,80 @@ namespace D2R_CLONEHUNTER
             {
                 addLog("Error while unblocking (out) " + cidr + " from the Windows Firewall : " + ex.Message);
             }
-            
+
             addLog("Firewall Unblocking (out) " + cidr + " from the Windows Firewall : ");
 
         }
 
-        private void btnFirewallClearBlockedSubnets_Click(object sender, EventArgs e)
+        private void WindowsFirewallAllow(string cidr)
         {
-            DialogResult dr = MessageBox.Show(this, "Are you sure that you want to remove and unblock all subnet from this list that are currently blocked ?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (dr == DialogResult.Yes)
+            try
             {
-                for (int index = 0; index < lstBlockedSubnets.Items.Count; index++)
-                {
-                    String s = lstBlockedSubnets.Items[index].ToString();
-
-                    WindowsFirewallUnblock(s);
-                }
-
-                _windowsFirewallBlockedCIDRs = new Hashtable();
-
-                lstBlockedSubnets.Items.Clear();
-
-                SaveSettingsWindowsFirewallBlockedCIDRs();
+                String arguments_in = "advfirewall firewall add rule name=\"DC_CLONEHUNTER IPs ALLOWING\" enable=yes action=allow remoteip=" + cidr + " dir=in";
+                ProcessStartInfo psi_in = new ProcessStartInfo("netsh", arguments_in);
+                psi_in.RedirectStandardOutput = true;
+                psi_in.UseShellExecute = false;
+                psi_in.CreateNoWindow = true;
+                System.Diagnostics.Process.Start(psi_in);
             }
+            catch (Exception ex)
+            {
+                addLog("Error while allowing (in) " + cidr + " from the Windows Firewall : " + ex.Message);
+            }
+
+            addLog("Firewall Allowing (in) " + cidr + " from the Windows Firewall : ");
+
+            try
+            {
+                String arguments_out = "advfirewall firewall add rule name=\"DC_CLONEHUNTER IPs ALLOWING\" enable=yes action=allow remoteip=" + cidr + " dir=out";
+                ProcessStartInfo psi_out = new ProcessStartInfo("netsh", arguments_out);
+                psi_out.RedirectStandardOutput = true;
+                psi_out.UseShellExecute = false;
+                psi_out.CreateNoWindow = true;
+                System.Diagnostics.Process.Start(psi_out);
+            }
+            catch (Exception ex)
+            {
+                addLog("Error while allowing (out) " + cidr + " from the Windows Firewall : " + ex.Message);
+            }
+
+            addLog("Firewall Allowing (out) " + cidr + " from the Windows Firewall : ");
+        }
+
+        private void WindowsFirewallUnallow(string cidr)
+        {
+            try
+            {
+                String arguments_in = "advfirewall firewall delete rule name=\"DC_CLONEHUNTER IPs ALLOWING\" remoteip=" + cidr + " dir=in";
+                ProcessStartInfo psi_in = new ProcessStartInfo("netsh", arguments_in);
+                psi_in.RedirectStandardOutput = true;
+                psi_in.UseShellExecute = false;
+                psi_in.CreateNoWindow = true;
+                System.Diagnostics.Process.Start(psi_in);
+            }
+            catch (Exception ex)
+            {
+                addLog("Error while unallowing (in) " + cidr + " from the Windows Firewall : " + ex.Message);
+            }
+
+            addLog("Firewall Unallowing (in) " + cidr + " from the Windows Firewall : ");
+
+            try
+            {
+                String arguments_out = "advfirewall firewall delete rule name=\"DC_CLONEHUNTER IPs ALLOWING\" remoteip=" + cidr + " dir=out";
+                ProcessStartInfo psi_out = new ProcessStartInfo("netsh", arguments_out);
+                psi_out.RedirectStandardOutput = true;
+                psi_out.UseShellExecute = false;
+                psi_out.CreateNoWindow = true;
+                System.Diagnostics.Process.Start(psi_out);
+            }
+            catch (Exception ex)
+            {
+                addLog("Error while unallowing (out) " + cidr + " from the Windows Firewall : " + ex.Message);
+            }
+
+            addLog("Firewall Unallowing (out) " + cidr + " from the Windows Firewall : ");
+
         }
 
         private void chkWindowsFirewallBlocking_CheckedChanged(object sender, EventArgs e)
@@ -1721,5 +1947,251 @@ namespace D2R_CLONEHUNTER
 
             this.Close();
         }
+
+        private void linkCidrCalculator_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            System.Diagnostics.Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://account.arin.net/public/cidrCalculator",
+                UseShellExecute = true
+            });
+
+        }
+
+        /********************************/
+        /** FIREWALL : BLOCKED IP CIDR **/
+        /********************************/
+        private void btnFirewallBlockIPAddressCIDR_Click(object sender, EventArgs e)
+        {
+            if (_frmCidrSelectorBlock != null)
+            {
+                _frmCidrSelectorBlock.Dispose();
+                _frmCidrSelectorBlock = null;
+            }
+
+            _frmCidrSelectorBlock = new frmCidrSelector();
+            _frmCidrSelectorBlock.CidrSelectorOK += _frmCidrSelectorBlock_CidrSelectorOK;
+            _frmCidrSelectorBlock.CidrSelectorCANCEL += _frmCidrSelectorBlock_CidrSelectorCANCEL;
+            _frmCidrSelectorBlock.ShowDialog(this);
+        }
+
+        private void _frmCidrSelectorBlock_CidrSelectorOK(System.Net.IPAddress ipaddress, String cidrclass)
+        {
+            String cidr = ipaddress.ToString() + cidrclass;
+            if (_windowsFirewallBlockedCIDRs.ContainsKey(cidr))
+            {
+                MessageBox.Show(this, "The provided IP Address Block (Subnet/CIDR) already exist in the blocked list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            _windowsFirewallBlockedCIDRs.Add(cidr, 1);
+            lstFirewallBlockedSubnets.Items.Add(cidr);
+
+            WindowsFirewallBlock(cidr);
+
+            SaveSettingsWindowsFirewallBlockedCIDRs();
+        }
+
+        private void _frmCidrSelectorBlock_CidrSelectorCANCEL()
+        {
+        }
+
+        private void btnFirewallBlockIPAddressRange_Click(object sender, EventArgs e)
+        {
+            if (_frmIpRangeSelectorBlock != null)
+            {
+                _frmIpRangeSelectorBlock.Dispose();
+                _frmIpRangeSelectorBlock = null;
+            }
+
+            _frmIpRangeSelectorBlock = new frmIpRangeSelector();
+            _frmIpRangeSelectorBlock.IpAddressRangeSelectorOK += _frmIpRangeSelectorBlock_IpAddressRangeSelectorOK;
+            _frmIpRangeSelectorBlock.IpAddressRangeSelectorCANCEL += _frmIpRangeSelectorBlock_IpAddressRangeSelectorCANCEL;
+            _frmIpRangeSelectorBlock.ShowDialog(this);
+        }
+
+        private void _frmIpRangeSelectorBlock_IpAddressRangeSelectorOK(List<String> CIDRs)
+        {
+            foreach (String cidr in CIDRs)
+            {
+                if (_windowsFirewallBlockedCIDRs.ContainsKey(cidr))
+                {
+                    addLog("FIREWALL ERROR: " + cidr + " already exist in the firewall blocked list, ignoring...");
+                    return;
+                }
+
+                _windowsFirewallBlockedCIDRs.Add(cidr, 1);
+                lstFirewallBlockedSubnets.Items.Add(cidr);
+
+                WindowsFirewallBlock(cidr);
+            }
+
+            SaveSettingsWindowsFirewallBlockedCIDRs();
+        }
+
+        private void _frmIpRangeSelectorBlock_IpAddressRangeSelectorCANCEL() 
+        { }
+
+        private void btnFirewallClearBlockedSubnets_Click(object sender, EventArgs e)
+        {
+            DialogResult dr = MessageBox.Show(this, "Are you sure that you want to remove and unblock all subnet from this list that are currently blocked ?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dr == DialogResult.Yes)
+            {
+                for (int index = 0; index < lstFirewallBlockedSubnets.Items.Count; index++)
+                {
+                    String s = lstFirewallBlockedSubnets.Items[index].ToString();
+
+                    WindowsFirewallUnblock(s);
+                }
+
+                _windowsFirewallBlockedCIDRs = new Hashtable();
+
+                lstFirewallBlockedSubnets.Items.Clear();
+
+                SaveSettingsWindowsFirewallBlockedCIDRs();
+            }
+        }
+
+        private void btnFirewallClearBlockedSelectedSubnet_Click(object sender, EventArgs e)
+        {
+            if (lstFirewallBlockedSubnets.SelectedIndex < 0)
+            {
+                MessageBox.Show(this, "You need to select a blocked subnet in the list to unblock it.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            else
+            {
+                String lSelectedListElement = (String)lstFirewallBlockedSubnets.Items[lstFirewallBlockedSubnets.SelectedIndex].ToString();
+
+                WindowsFirewallUnblock(lSelectedListElement);
+
+                lstFirewallBlockedSubnets.Items.RemoveAt(lstFirewallBlockedSubnets.SelectedIndex);
+
+                _windowsFirewallBlockedCIDRs.Remove(lSelectedListElement);
+
+                SaveSettingsWindowsFirewallBlockedCIDRs();
+
+            }
+        }
+
+
+
+        /********************************/
+        /** FIREWALL : ALLOWED IP CIDR **/
+        /********************************/
+        private void btnFirewallAllowIPAddressCIDR_Click(object sender, EventArgs e)
+        {
+            if (_frmCidrSelectorAllow != null)
+            {
+                _frmCidrSelectorAllow.Dispose();
+                _frmCidrSelectorAllow = null;
+            }
+
+            _frmCidrSelectorAllow = new frmCidrSelector();
+            _frmCidrSelectorAllow.CidrSelectorOK += _frmCidrSelectorAllow_CidrSelectorOK;
+            _frmCidrSelectorAllow.CidrSelectorCANCEL += _frmCidrSelectorAllow_CidrSelectorCANCEL;
+            _frmCidrSelectorAllow.ShowDialog(this);
+        }
+
+        private void _frmCidrSelectorAllow_CidrSelectorOK(System.Net.IPAddress ipaddress, String cidrclass)
+        {
+            String cidr = ipaddress.ToString() + cidrclass;
+            if (_windowsFirewallAllowedCIDRs.ContainsKey(cidr))
+            {
+                MessageBox.Show(this, "The provided IP Address Block (Subnet/CIDR) already exist in the allowed list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            _windowsFirewallAllowedCIDRs.Add(cidr, 1);
+            lstFirewallAllowedSubnet.Items.Add(cidr);
+
+            WindowsFirewallAllow(cidr);
+
+            SaveSettingsWindowsFirewallAllowedCIDRs();
+        }
+
+        private void _frmCidrSelectorAllow_CidrSelectorCANCEL()
+        {
+        }
+
+        private void btnFirewallAllowIPAddressRange_Click(object sender, EventArgs e)
+        {
+            if (_frmIpRangeSelectorAllow != null)
+            {
+                _frmIpRangeSelectorAllow.Dispose();
+                _frmIpRangeSelectorAllow = null;
+            }
+
+            _frmIpRangeSelectorAllow = new frmIpRangeSelector();
+            _frmIpRangeSelectorAllow.IpAddressRangeSelectorOK += _frmIpRangeSelectorAllow_IpAddressRangeSelectorOK;
+            _frmIpRangeSelectorAllow.IpAddressRangeSelectorCANCEL += _frmIpRangeSelectorAllow_IpAddressRangeSelectorCANCEL;
+            _frmIpRangeSelectorAllow.ShowDialog(this);
+        }
+
+        private void _frmIpRangeSelectorAllow_IpAddressRangeSelectorOK(List<String> CIDRs)
+        {
+            foreach (String cidr in CIDRs)
+            {
+                if (_windowsFirewallAllowedCIDRs.ContainsKey(cidr))
+                {
+                    addLog("FIREWALL ERROR: " + cidr + " already exist in the firewall allowed list, ignoring...");
+                    return;
+                }
+
+                _windowsFirewallAllowedCIDRs.Add(cidr, 1);
+                lstFirewallAllowedSubnet.Items.Add(cidr);
+
+                WindowsFirewallAllow(cidr);
+            }
+
+            SaveSettingsWindowsFirewallAllowedCIDRs();
+        }
+
+        private void _frmIpRangeSelectorAllow_IpAddressRangeSelectorCANCEL()
+        { }
+
+        private void btnFirewallClearAllowedSubnets_Click(object sender, EventArgs e)
+        {
+            DialogResult dr = MessageBox.Show(this, "Are you sure that you want to remove and unallow all subnet from this list that are currently allowed ?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dr == DialogResult.Yes)
+            {
+                for (int index = 0; index < lstFirewallAllowedSubnet.Items.Count; index++)
+                {
+                    String s = lstFirewallAllowedSubnet.Items[index].ToString();
+
+                    WindowsFirewallUnallow(s);
+                }
+
+                _windowsFirewallAllowedCIDRs = new Hashtable();
+
+                lstFirewallAllowedSubnet.Items.Clear();
+
+                SaveSettingsWindowsFirewallAllowedCIDRs();
+            }
+        }
+
+        private void btnFirewallClearAllowedSelectedSubnet_Click(object sender, EventArgs e)
+        {
+            if (lstFirewallAllowedSubnet.SelectedIndex < 0)
+            {
+                MessageBox.Show(this, "You need to select an allowed subnet in the list to unallow it.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            else
+            {
+                String lSelectedListElement = (String)lstFirewallAllowedSubnet.Items[lstFirewallAllowedSubnet.SelectedIndex].ToString();
+
+                WindowsFirewallUnallow(lSelectedListElement);
+
+                lstFirewallAllowedSubnet.Items.RemoveAt(lstFirewallAllowedSubnet.SelectedIndex);
+
+                _windowsFirewallAllowedCIDRs.Remove(lSelectedListElement);
+
+                SaveSettingsWindowsFirewallAllowedCIDRs();
+
+            }
+        }
+
+
     }
 }

@@ -126,6 +126,10 @@
   <metadata name="d2RIpAddressCountEntityBindingSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>104, 17</value>
   </metadata>
+  <data name="label15.Text" xml:space="preserve">
+    <value>This feature allow you to specify CIDR Subnets and IP Ranges to block (or allow) with the windows firewall when the application start, and to remove the created firewall rules once the application end in a normal way. 
+</value>
+  </data>
   <metadata name="tmrTextFileCreations.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>511, 17</value>
   </metadata>
